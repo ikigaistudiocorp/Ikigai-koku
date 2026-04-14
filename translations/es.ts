@@ -169,6 +169,9 @@ export const es = {
   ai_feedback_debug_share: "DEBUG promedio",
   ai_team_comparison: "Comparación del equipo",
 
+  pending_stop_banner: "Sesión pendiente de sincronización",
+  pending_stop_retry: "Reintentar",
+
   common_cancel: "Cancelar",
   common_save: "Guardar",
   common_loading: "Cargando...",

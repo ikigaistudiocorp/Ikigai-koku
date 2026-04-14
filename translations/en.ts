@@ -166,6 +166,9 @@ export const en = {
   ai_feedback_debug_share: "Average DEBUG",
   ai_team_comparison: "Team comparison",
 
+  pending_stop_banner: "Session pending sync",
+  pending_stop_retry: "Retry",
+
   common_cancel: "Cancel",
   common_save: "Save",
   common_loading: "Loading...",

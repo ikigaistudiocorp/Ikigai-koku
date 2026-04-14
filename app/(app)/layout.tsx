@@ -4,6 +4,7 @@ import { TopBar } from "@/components/TopBar";
 import { BottomNav } from "@/components/BottomNav";
 import { ActiveTimerBanner } from "@/components/ActiveTimerBanner";
 import { PushPermissionPrompt } from "@/components/PushPermissionPrompt";
+import { PendingStopBanner } from "@/components/PendingStopBanner";
 
 export default async function AppLayout({
   children,
@@ -18,6 +19,7 @@ export default async function AppLayout({
     <>
       <TopBar />
       <PushPermissionPrompt />
+      <PendingStopBanner />
       <ActiveTimerBanner />
       <div className="flex-1 flex flex-col">{children}</div>
       <BottomNav />

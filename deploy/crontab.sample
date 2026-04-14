@@ -1,0 +1,8 @@
+# Koku crontab. Install with `crontab -e` on the production VPS.
+# CRON_SECRET must match .env.local (or the PM2 process env).
+
+# Session notifications — every 30 minutes.
+*/30 * * * * curl -fsS -H "X-Cron-Secret: $CRON_SECRET" https://koku.ikigaistudio.ai/api/cron/notifications >> /var/log/koku-cron.log 2>&1
+
+# Weekly Mirror — Monday 07:30 America/Panama (UTC-5) = 12:30 UTC.
+30 12 * * 1 curl -fsS -H "X-Cron-Secret: $CRON_SECRET" https://koku.ikigaistudio.ai/api/cron/weekly-mirror >> /var/log/koku-cron.log 2>&1

@@ -18,6 +18,7 @@ import { ProjectPicker } from "@/components/ui/ProjectPicker";
 import { WorkTypePicker } from "@/components/ui/WorkTypePicker";
 import { SessionFeedbackPicker } from "@/components/ui/SessionFeedbackPicker";
 import { MAX_NOTE_LENGTH } from "@/lib/sessions";
+import { toast as pushToast } from "@/store/toastStore";
 
 type PickerValue =
   | { kind: "builtin"; workType: WorkType }
@@ -44,6 +45,7 @@ export function ClockScreen() {
 
   const storedProject = useClockStore((s) => s.selectedProjectId);
   const setStoredProject = useClockStore((s) => s.setSelectedProjectId);
+  const setPendingStop = useClockStore((s) => s.setPendingStop);
 
   const [pickerValue, setPickerValue] = useState<PickerValue | null>(null);
   const [busy, setBusy] = useState(false);
@@ -51,7 +53,6 @@ export function ClockScreen() {
   const [sheet, setSheet] = useState<"project" | "switch" | null>(null);
   const [note, setNote] = useState("");
   const [pendingStopId, setPendingStopId] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   const selectedProjectId = storedProject;
   const selectedProject =
@@ -154,20 +155,30 @@ export function ClockScreen() {
       setNote("");
       await refreshAll();
       if (data.discarded) {
-        setToast(t("clock_session_discarded"));
+        pushToast(t("clock_session_discarded"), "warning");
       } else if (typeof data.duration_minutes === "number") {
         const { h, m } = formatHM(data.duration_minutes);
-        setToast(
+        pushToast(
           t("clock_session_saved", {
             duration: `${h}h ${m}m`,
             type: active ? labelFor(active.work_type, language) : "",
             project: active?.project.name ?? "",
-          })
+          }),
+          "success"
         );
       }
-      window.setTimeout(() => setToast(null), 4000);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "stop_failed");
+    } catch {
+      // Network / 5xx — queue so PendingStopBanner can retry on its own.
+      if (pendingStopId) {
+        setPendingStop({
+          session_id: pendingStopId,
+          note: note || null,
+          feedback,
+          queued_at: Date.now(),
+        });
+      }
+      setPendingStopId(null);
+      setNote("");
     } finally {
       setBusy(false);
     }
@@ -265,7 +276,6 @@ export function ClockScreen() {
           </BottomSheet>
         )}
 
-        {toast && <Toast message={toast} />}
       </main>
     );
   }
@@ -369,7 +379,6 @@ export function ClockScreen() {
         />
       </BottomSheet>
 
-      {toast && <Toast message={toast} />}
     </main>
   );
 }
@@ -386,14 +395,6 @@ function OfflineBanner() {
     <div className="rounded-lg bg-ikigai-amber/20 border border-ikigai-amber/40 text-ikigai-amber px-3 py-2 text-sm">
       <strong className="font-medium">{t("offline_banner")}</strong>
       <span className="ml-2 text-ikigai-amber/80">{t("offline_detail")}</span>
-    </div>
-  );
-}
-
-function Toast({ message }: { message: string }) {
-  return (
-    <div className="fixed left-1/2 -translate-x-1/2 bottom-24 z-50 bg-ikigai-dark text-white dark:bg-ikigai-cream dark:text-ikigai-dark text-sm rounded-full px-4 py-2 shadow-lg">
-      {message}
     </div>
   );
 }
