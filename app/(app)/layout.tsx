@@ -21,7 +21,14 @@ export default async function AppLayout({
       <PushPermissionPrompt />
       <PendingStopBanner />
       <ActiveTimerBanner />
-      <div className="flex-1 flex flex-col">{children}</div>
+      <div
+        className="flex-1 flex flex-col"
+        style={{
+          paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom))",
+        }}
+      >
+        {children}
+      </div>
       <BottomNav />
     </>
   );
