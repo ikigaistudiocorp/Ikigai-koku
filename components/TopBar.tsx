@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -43,7 +42,6 @@ export function TopBar() {
           </span>
         </Link>
         <div className="flex items-center gap-2">
-          <LanguageToggle />
           {me?.user && (
             <Link
               href="/settings"
