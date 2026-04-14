@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signUp } from "@/lib/auth-client";
 import { useTranslation } from "@/lib/i18n";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  );
+}
+
+function LoginInner() {
   const { t } = useTranslation();
   const router = useRouter();
   const params = useSearchParams();

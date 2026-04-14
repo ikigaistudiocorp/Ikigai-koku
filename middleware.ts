@@ -29,6 +29,11 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
+// Better Auth / jose pull CompressionStream via dynamic imports that the
+// Edge runtime refuses. Pin to Node so the middleware can run them freely
+// and silence the build-time warning.
+export const runtime = "nodejs";
+
 export const config = {
   matcher: [
     // Match everything except Next.js internals, static files, and the PWA
