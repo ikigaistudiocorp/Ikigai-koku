@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Shippori_Antique_B1, JetBrains_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
+
+const THEME_INIT = `(function(){try{var s=localStorage.getItem("koku-theme");var d=s?s==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.dataset.theme=d?"dark":"light";}catch(e){}})();`;
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -58,14 +59,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-ikigai-cream text-ikigai-dark dark:bg-ikigai-dark dark:text-ikigai-cream">
-        {/* Anti-flash theme init. next/script beforeInteractive is
-            hoisted into <head> by Next so it runs before React hydrates
-            and before the browser paints. A separate file avoids the
-            React 19 "script inside component" warning. */}
-        <Script
-          src="/koku-theme-init.js"
-          strategy="beforeInteractive"
-        />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <Providers>{children}</Providers>
       </body>
     </html>
