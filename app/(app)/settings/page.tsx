@@ -1,40 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTranslation } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
+
+async function saveSettings(patch: Record<string, unknown>) {
+  await fetch("/api/me/settings", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(patch),
+  });
+}
 
 export default function SettingsPage() {
   const { t } = useTranslation();
   const { data: me, refetch } = useCurrentUser();
 
-  const [lang, setLang] = useState<"es" | "en">("es");
-  const [ahStart, setAhStart] = useState("20:00");
-  const [ahEnd, setAhEnd] = useState("07:00");
-  const [mirror, setMirror] = useState(true);
+  if (!me?.kokuUser) return null;
 
-  useEffect(() => {
-    if (!me?.kokuUser) return;
-    setLang(me.kokuUser.preferred_language);
-    setAhStart(me.kokuUser.after_hours_start.slice(0, 5));
-    setAhEnd(me.kokuUser.after_hours_end.slice(0, 5));
-    setMirror(me.kokuUser.weekly_mirror_enabled);
-  }, [me?.kokuUser]);
+  const ku = me.kokuUser;
+  const isOwner = ku.role === "owner";
+  const afterStart = ku.after_hours_start.slice(0, 5);
+  const afterEnd = ku.after_hours_end.slice(0, 5);
 
   const save = async (patch: Record<string, unknown>) => {
-    await fetch("/api/me/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(patch),
-    });
+    await saveSettings(patch);
     refetch();
   };
-
-  if (!me?.kokuUser) return null;
-  const isOwner = me.kokuUser.role === "owner";
 
   return (
     <main className="flex-1 px-5 py-6 space-y-5">
@@ -45,12 +39,9 @@ export default function SettingsPage() {
           {t("settings_language")}
         </h2>
         <select
-          value={lang}
-          onChange={(e) => {
-            const v = e.target.value as "es" | "en";
-            setLang(v);
-            save({ preferred_language: v });
-          }}
+          key={`lang-${ku.preferred_language}`}
+          defaultValue={ku.preferred_language}
+          onChange={(e) => save({ preferred_language: e.target.value })}
           className="w-full h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
         >
           <option value="es">Español</option>
@@ -64,17 +55,17 @@ export default function SettingsPage() {
         </h2>
         <div className="flex gap-2">
           <input
+            key={`ah-start-${afterStart}`}
             type="time"
-            value={ahStart}
-            onChange={(e) => setAhStart(e.target.value)}
-            onBlur={() => save({ after_hours_start: ahStart })}
+            defaultValue={afterStart}
+            onBlur={(e) => save({ after_hours_start: e.target.value })}
             className="flex-1 h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
           />
           <input
+            key={`ah-end-${afterEnd}`}
             type="time"
-            value={ahEnd}
-            onChange={(e) => setAhEnd(e.target.value)}
-            onBlur={() => save({ after_hours_end: ahEnd })}
+            defaultValue={afterEnd}
+            onBlur={(e) => save({ after_hours_end: e.target.value })}
             className="flex-1 h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
           />
         </div>
@@ -83,12 +74,10 @@ export default function SettingsPage() {
       <Card padding="md" className="flex items-center justify-between">
         <span>{t("settings_mirror")}</span>
         <input
+          key={`mirror-${ku.weekly_mirror_enabled}`}
           type="checkbox"
-          checked={mirror}
-          onChange={(e) => {
-            setMirror(e.target.checked);
-            save({ weekly_mirror_enabled: e.target.checked });
-          }}
+          defaultChecked={ku.weekly_mirror_enabled}
+          onChange={(e) => save({ weekly_mirror_enabled: e.target.checked })}
           className="w-6 h-6"
         />
       </Card>
@@ -98,10 +87,7 @@ export default function SettingsPage() {
           <h2 className="text-xs uppercase tracking-wider font-mono text-ikigai-dark/60 dark:text-ikigai-cream/60">
             Admin
           </h2>
-          <Link
-            href="/settings/work-types"
-            className="block py-2 underline"
-          >
+          <Link href="/settings/work-types" className="block py-2 underline">
             {t("settings_admin_work_types")}
           </Link>
         </Card>
