@@ -172,6 +172,19 @@ export const es = {
   pending_stop_banner: "Sesión pendiente de sincronización",
   pending_stop_retry: "Reintentar",
 
+  admin_users_title: "Miembros del equipo",
+  admin_users_new: "Nuevo miembro",
+  admin_users_edit: "Editar",
+  admin_users_delete: "Eliminar",
+  admin_users_delete_confirm:
+    "¿Eliminar a {name}? Esta acción borra todas sus sesiones y no se puede deshacer.",
+  admin_users_self_badge: "tú",
+  admin_users_new_password: "Nueva contraseña (opcional)",
+
+  admin_projects_delete: "Eliminar proyecto",
+  admin_projects_delete_confirm:
+    "¿Eliminar {name}? Se borrarán todas las sesiones asociadas.",
+
   common_cancel: "Cancelar",
   common_save: "Guardar",
   common_loading: "Cargando...",

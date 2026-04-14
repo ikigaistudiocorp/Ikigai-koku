@@ -39,6 +39,6 @@ export const config = {
     // Match everything except Next.js internals, static files, and the PWA
     // service worker. Route-group folders (`(app)`, `(auth)`) are invisible in
     // URLs so they don't need to be listed.
-    "/((?!_next/|favicon.ico|icon-|manifest.json|sw.js|workbox-).*)",
+    "/((?!_next/|favicon\\.|icon-|icons/|images/|manifest\\.json|sw\\.js|sw-push\\.js|workbox-).*)",
   ],
 };

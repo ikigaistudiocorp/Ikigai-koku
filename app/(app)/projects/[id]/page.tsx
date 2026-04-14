@@ -2,6 +2,7 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -66,7 +67,9 @@ export default function ProjectDetailPage({
   const { data: me } = useCurrentUser();
   const isOwner = me?.kokuUser?.role === "owner";
   const qc = useQueryClient();
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data: team } = useQuery<{ members: { id: string; name: string; email: string }[] }>({
     queryKey: ["team"],
@@ -131,9 +134,36 @@ export default function ProjectDetailPage({
             )}
           </div>
           {isOwner && (
-            <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
-              {t("projects_detail_edit")}
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
+                {t("projects_detail_edit")}
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
+                loading={deleting}
+                onClick={async () => {
+                  const confirmText = t("admin_projects_delete_confirm", {
+                    name: data.project.name,
+                  });
+                  if (!window.confirm(confirmText)) return;
+                  setDeleting(true);
+                  try {
+                    const res = await fetch(`/api/projects/${id}`, {
+                      method: "DELETE",
+                      credentials: "include",
+                    });
+                    if (!res.ok) throw new Error(String(res.status));
+                    await qc.invalidateQueries({ queryKey: ["projects"] });
+                    router.replace("/projects");
+                  } catch {
+                    setDeleting(false);
+                  }
+                }}
+              >
+                {t("admin_projects_delete")}
+              </Button>
+            </div>
           )}
         </div>
       </header>

@@ -169,6 +169,19 @@ export const en = {
   pending_stop_banner: "Session pending sync",
   pending_stop_retry: "Retry",
 
+  admin_users_title: "Team members",
+  admin_users_new: "New member",
+  admin_users_edit: "Edit",
+  admin_users_delete: "Delete",
+  admin_users_delete_confirm:
+    "Delete {name}? This removes all their sessions and cannot be undone.",
+  admin_users_self_badge: "you",
+  admin_users_new_password: "New password (optional)",
+
+  admin_projects_delete: "Delete project",
+  admin_projects_delete_confirm:
+    "Delete {name}? All associated sessions will be erased.",
+
   common_cancel: "Cancel",
   common_save: "Save",
   common_loading: "Loading...",

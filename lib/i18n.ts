@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { es } from "@/translations/es";
@@ -13,13 +14,18 @@ type LanguageStore = {
   setLanguage: (lang: Language) => void;
 };
 
+// skipHydration keeps persisted state out of the initial server render;
+// useTranslation triggers rehydrate() once on the client.
 export const useLanguageStore = create<LanguageStore>()(
   persist(
     (set) => ({
       language: "es",
       setLanguage: (language) => set({ language }),
     }),
-    { name: "koku-language" }
+    {
+      name: "koku-language",
+      skipHydration: true,
+    }
   )
 );
 
@@ -32,9 +38,22 @@ function interpolate(template: string, vars?: Vars): string {
   );
 }
 
+const subscribe = (cb: () => void) => useLanguageStore.subscribe(cb);
+const getSnapshot = () => useLanguageStore.getState().language;
+const getServerSnapshot = (): Language => "es";
+
 export function useTranslation() {
-  const language = useLanguageStore((s) => s.language);
-  const setLanguage = useLanguageStore((s) => s.setLanguage);
+  const language = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot
+  );
+
+  // Kick off localStorage rehydration once on mount. useSyncExternalStore
+  // handles the re-render — no setState-in-effect, no mismatch.
+  useEffect(() => {
+    void useLanguageStore.persist.rehydrate();
+  }, []);
 
   const t = (key: string, vars?: Vars): string => {
     const dict = (language === "en" ? en : es) as Record<string, string>;
@@ -43,5 +62,9 @@ export function useTranslation() {
     return interpolate(template, vars);
   };
 
-  return { t, language, setLanguage };
+  return {
+    t,
+    language,
+    setLanguage: useLanguageStore.getState().setLanguage,
+  };
 }

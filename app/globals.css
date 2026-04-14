@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Dark variant reads the data-theme attribute set by the inline head
+   script in app/layout.tsx. Works under React 19 without fighting the
+   className reconciliation. Keep .dark as a legacy selector for any
+   code that still toggles a class. */
+@custom-variant dark (&:where([data-theme="dark"] *, [data-theme="dark"], .dark, .dark *));
 
 @theme {
   --color-ikigai-cream: #F7F7F5;
@@ -23,6 +27,7 @@
   --border: #E5E5E0;
 }
 
+[data-theme="dark"],
 .dark {
   --background: #1A1A1A;
   --foreground: #F7F7F5;

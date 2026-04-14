@@ -244,3 +244,26 @@ export async function PATCH(req: Request, ctx: Ctx) {
   }
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE(_req: Request, ctx: Ctx) {
+  const current = await requireOwner();
+  if (current instanceof Response) return current;
+  const { id } = await ctx.params;
+
+  const { rows } = await query<{ name: string }>(
+    `SELECT name FROM projects WHERE id = $1 LIMIT 1`,
+    [id]
+  );
+  if (rows.length === 0) return jsonError("not_found", 404);
+
+  // Refuse to nuke the hidden baseline bucket — would orphan the onboarding
+  // history.
+  if (rows[0].name === "__koku_baseline") {
+    return jsonError("cannot_delete_baseline_project", 409);
+  }
+
+  // FK cascades now take care of project_members, sessions, and project-
+  // scoped custom_work_types.
+  await query(`DELETE FROM projects WHERE id = $1`, [id]);
+  return NextResponse.json({ ok: true });
+}

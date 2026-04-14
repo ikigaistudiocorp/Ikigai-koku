@@ -176,3 +176,47 @@ CREATE INDEX IF NOT EXISTS sessions_started_at_idx ON sessions (started_at);
 CREATE INDEX IF NOT EXISTS sessions_work_type_idx ON sessions (work_type);
 CREATE INDEX IF NOT EXISTS sessions_is_active_idx ON sessions (user_id)
   WHERE is_active = true;
+
+-- ─── FK cascade hardening (idempotent) ────────────────────────────────────
+-- Deleting a koku_user or a project should not leave orphan rows.
+-- created_by references nullable on delete so history survives.
+
+ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_user_id_fkey;
+ALTER TABLE sessions
+  ADD CONSTRAINT sessions_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES koku_users(id) ON DELETE CASCADE;
+
+ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_project_id_fkey;
+ALTER TABLE sessions
+  ADD CONSTRAINT sessions_project_id_fkey
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
+
+ALTER TABLE push_subscriptions DROP CONSTRAINT IF EXISTS push_subscriptions_user_id_fkey;
+ALTER TABLE push_subscriptions
+  ADD CONSTRAINT push_subscriptions_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES koku_users(id) ON DELETE CASCADE;
+
+ALTER TABLE weekly_mirrors DROP CONSTRAINT IF EXISTS weekly_mirrors_user_id_fkey;
+ALTER TABLE weekly_mirrors
+  ADD CONSTRAINT weekly_mirrors_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES koku_users(id) ON DELETE CASCADE;
+
+ALTER TABLE friday_context DROP CONSTRAINT IF EXISTS friday_context_user_id_fkey;
+ALTER TABLE friday_context
+  ADD CONSTRAINT friday_context_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES koku_users(id) ON DELETE CASCADE;
+
+ALTER TABLE notification_log DROP CONSTRAINT IF EXISTS notification_log_user_id_fkey;
+ALTER TABLE notification_log
+  ADD CONSTRAINT notification_log_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES koku_users(id) ON DELETE CASCADE;
+
+ALTER TABLE projects DROP CONSTRAINT IF EXISTS projects_created_by_fkey;
+ALTER TABLE projects
+  ADD CONSTRAINT projects_created_by_fkey
+  FOREIGN KEY (created_by) REFERENCES koku_users(id) ON DELETE SET NULL;
+
+ALTER TABLE custom_work_types DROP CONSTRAINT IF EXISTS custom_work_types_created_by_fkey;
+ALTER TABLE custom_work_types
+  ADD CONSTRAINT custom_work_types_created_by_fkey
+  FOREIGN KEY (created_by) REFERENCES koku_users(id) ON DELETE SET NULL;
