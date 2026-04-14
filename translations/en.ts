@@ -97,6 +97,24 @@ export const en = {
     "Archive this type? It will be removed from the picker but history is preserved.",
   settings_custom_types_archived: "Archived",
 
+  friday_ctx_title: "Context for your mirror",
+  friday_ctx_subtitle:
+    "Optional. Claude will use this when writing your Monday mirror.",
+  friday_ctx_skip: "Nothing to add",
+
+  push_enable_cta: "Enable notifications for session reminders.",
+  push_enable_button: "Enable",
+  push_disable: "Disable",
+
+  settings_title: "Settings",
+  settings_push: "Push notifications",
+  settings_language: "Language",
+  settings_after_hours: "After-hours window",
+  settings_mirror: "Weekly Mirror",
+  settings_account: "Account",
+  settings_admin_work_types: "Custom work types",
+  settings_admin_users: "Team members",
+
   common_cancel: "Cancel",
   common_save: "Save",
   common_loading: "Loading...",

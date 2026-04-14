@@ -97,6 +97,24 @@ export const es = {
     "¿Archivar este tipo? Desaparecerá del selector pero el historial se conserva.",
   settings_custom_types_archived: "Archivado",
 
+  friday_ctx_title: "Contexto para tu espejo",
+  friday_ctx_subtitle:
+    "Opcional. Claude lo usará al escribir tu espejo del lunes.",
+  friday_ctx_skip: "No tengo nada que agregar",
+
+  push_enable_cta: "Activa las notificaciones para recordatorios de sesión.",
+  push_enable_button: "Activar",
+  push_disable: "Desactivar",
+
+  settings_title: "Configuración",
+  settings_push: "Notificaciones push",
+  settings_language: "Idioma",
+  settings_after_hours: "Horario fuera de jornada",
+  settings_mirror: "Espejo semanal",
+  settings_account: "Cuenta",
+  settings_admin_work_types: "Tipos de trabajo personalizados",
+  settings_admin_users: "Miembros del equipo",
+
   common_cancel: "Cancelar",
   common_save: "Guardar",
   common_loading: "Cargando...",

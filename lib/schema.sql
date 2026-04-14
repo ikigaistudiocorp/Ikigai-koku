@@ -158,6 +158,17 @@ CREATE TABLE IF NOT EXISTS weekly_mirrors (
   UNIQUE (user_id, week_start)
 );
 
+-- Outbound notification log — used to rate-limit heartbeat + daily + friday pushes.
+CREATE TABLE IF NOT EXISTS notification_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL REFERENCES koku_users(id) ON DELETE CASCADE,
+  tag TEXT NOT NULL,
+  sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS notification_log_user_tag_idx
+  ON notification_log (user_id, tag, sent_at DESC);
+
 -- Indexes on sessions.
 CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions (user_id);
 CREATE INDEX IF NOT EXISTS sessions_project_id_idx ON sessions (project_id);

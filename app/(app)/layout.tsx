@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth-session";
 import { TopBar } from "@/components/TopBar";
 import { BottomNav } from "@/components/BottomNav";
 import { ActiveTimerBanner } from "@/components/ActiveTimerBanner";
+import { PushPermissionPrompt } from "@/components/PushPermissionPrompt";
 
 export default async function AppLayout({
   children,
@@ -16,6 +17,7 @@ export default async function AppLayout({
   return (
     <>
       <TopBar />
+      <PushPermissionPrompt />
       <ActiveTimerBanner />
       <div className="flex-1 flex flex-col">{children}</div>
       <BottomNav />
