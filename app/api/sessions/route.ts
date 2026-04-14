@@ -44,7 +44,7 @@ export async function GET(req: Request) {
   const sql = `
     SELECT s.id, s.user_id, s.project_id, s.work_type, s.custom_work_type_id,
            s.started_at, s.ended_at, s.duration_minutes, s.note, s.feedback,
-           s.is_baseline,
+           s.is_baseline, s.edited_at, s.edit_history,
            p.name AS project_name, p.client_name,
            c.name AS custom_work_type_name, c.color AS custom_work_type_color,
            u.name AS user_name

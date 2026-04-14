@@ -11,6 +11,7 @@ import { useTranslation } from "@/lib/i18n";
 import { WORK_TYPE_META, type WorkType } from "@/types";
 import { WorkTypeDot } from "@/components/ui/WorkTypeDot";
 import { StopTimeModal } from "@/components/StopTimeModal";
+import { PlannedSessions } from "@/components/PlannedSessions";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -72,19 +73,10 @@ export function ClockScreen() {
     ]);
   };
 
-  const onStart = async () => {
-    if (!selectedProjectId || !pickerValue) return;
+  const startSession = async (body: Record<string, unknown>) => {
     setBusy(true);
     setError(null);
     try {
-      const body =
-        pickerValue.kind === "builtin"
-          ? { project_id: selectedProjectId, work_type: pickerValue.workType }
-          : {
-              project_id: selectedProjectId,
-              work_type: "other" as const,
-              custom_work_type_id: pickerValue.customId,
-            };
       const res = await fetch("/api/sessions/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -101,6 +93,42 @@ export function ClockScreen() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const onStart = async () => {
+    if (!selectedProjectId || !pickerValue) return;
+    const body =
+      pickerValue.kind === "builtin"
+        ? { project_id: selectedProjectId, work_type: pickerValue.workType }
+        : {
+            project_id: selectedProjectId,
+            work_type: "other" as const,
+            custom_work_type_id: pickerValue.customId,
+          };
+    await startSession(body);
+  };
+
+  const onStartFromPlan = async (row: {
+    id: string;
+    project_id: string;
+    work_type: string;
+    custom_work_type_id: string | null;
+  }) => {
+    if (active) return;
+    const body =
+      row.custom_work_type_id
+        ? {
+            project_id: row.project_id,
+            work_type: "other" as const,
+            custom_work_type_id: row.custom_work_type_id,
+          }
+        : { project_id: row.project_id, work_type: row.work_type };
+    await startSession(body);
+    await fetch(`/api/planned-sessions/${row.id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    qc.invalidateQueries({ queryKey: ["planned-sessions"] });
   };
 
   const onSwitch = async (v: PickerValue) => {
@@ -390,6 +418,8 @@ export function ClockScreen() {
       </Button>
 
       <TodayList today={today} />
+
+      <PlannedSessions onStartFromPlan={onStartFromPlan} disabled={!!active || busy} />
 
       <BottomSheet
         open={sheet === "project"}

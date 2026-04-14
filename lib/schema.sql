@@ -230,3 +230,25 @@ ALTER TABLE sessions ADD CONSTRAINT sessions_work_type_check
     'spec', 'build', 'debug', 'polish',
     'arch', 'client', 'meeting', 'admin', 'other'
   ));
+
+-- 2026-04-14: session edit audit trail.
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS edited_at timestamptz;
+ALTER TABLE sessions
+  ADD COLUMN IF NOT EXISTS edit_history jsonb NOT NULL DEFAULT '[]'::jsonb;
+
+-- 2026-04-14: planned sessions (per-user to-do list).
+CREATE TABLE IF NOT EXISTS planned_sessions (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         text NOT NULL REFERENCES koku_users(id) ON DELETE CASCADE,
+  project_id      uuid NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  work_type       text NOT NULL,
+  custom_work_type_id uuid REFERENCES custom_work_types(id) ON DELETE SET NULL,
+  note            text,
+  created_at      timestamptz NOT NULL DEFAULT NOW(),
+  CHECK (work_type IN (
+    'spec', 'build', 'debug', 'polish',
+    'arch', 'client', 'meeting', 'admin', 'other'
+  ))
+);
+CREATE INDEX IF NOT EXISTS planned_sessions_user_idx
+  ON planned_sessions (user_id, created_at DESC);

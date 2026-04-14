@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/Card";
 import { useTranslation } from "@/lib/i18n";
 import { WORK_TYPE_META, type WorkType } from "@/types";
 import { WorkTypeDot } from "@/components/ui/WorkTypeDot";
 import { WorkTypeLegend } from "@/components/ui/WorkTypeLegend";
+import {
+  SessionEditModal,
+  type EditHistoryEntry,
+} from "@/components/SessionEditModal";
 
 type SessionRow = {
   id: string;
@@ -19,8 +23,12 @@ type SessionRow = {
   custom_work_type_color: string | null;
   duration_minutes: number | null;
   started_at: string;
+  ended_at: string | null;
   note: string | null;
   feedback: string | null;
+  is_baseline: boolean;
+  edited_at: string | null;
+  edit_history: EditHistoryEntry[] | null;
 };
 
 type ListResponse = {
@@ -32,9 +40,23 @@ type ListResponse = {
 
 const PAGE_SIZE = 25;
 
+const SUSPICIOUS_MINUTES = 6 * 60;
+
+function isSuspicious(s: SessionRow): boolean {
+  if ((s.duration_minutes ?? 0) >= SUSPICIOUS_MINUTES) return true;
+  if (s.ended_at) {
+    const d1 = s.started_at.slice(0, 10);
+    const d2 = s.ended_at.slice(0, 10);
+    if (d1 !== d2) return true;
+  }
+  return false;
+}
+
 export default function SessionsHistoryPage() {
   const { t, language } = useTranslation();
   const [offset, setOffset] = useState(0);
+  const [editing, setEditing] = useState<SessionRow | null>(null);
+  const qc = useQueryClient();
 
   const { data } = useQuery<ListResponse>({
     queryKey: ["sessions-history", offset],
@@ -103,12 +125,57 @@ export default function SessionsHistoryPage() {
                       {s.started_at.slice(0, 10)}
                     </div>
                   </div>
+                  <div className="flex items-center gap-1">
+                    {isSuspicious(s) && (
+                      <span
+                        title={t("session_flag_suspicious")}
+                        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold"
+                        aria-label={t("session_flag_suspicious")}
+                      >
+                        !
+                      </span>
+                    )}
+                    {s.edited_at && (
+                      <span
+                        title={t("session_flag_edited")}
+                        aria-label={t("session_flag_edited")}
+                        className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400"
+                      />
+                    )}
+                    {!s.is_baseline && (
+                      <button
+                        type="button"
+                        onClick={() => setEditing(s)}
+                        aria-label={t("session_edit_title")}
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-full hover:bg-black/[0.06] dark:hover:bg-white/[0.06] text-ikigai-dark/70 dark:text-ikigai-cream/70"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </Card>
             </li>
           );
         })}
       </ul>
+
+      {editing && (
+        <SessionEditModal
+          sessionId={editing.id}
+          startedAt={editing.started_at}
+          endedAt={editing.ended_at}
+          editHistory={editing.edit_history ?? []}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["sessions-history"] });
+            qc.invalidateQueries({ queryKey: ["sessions", "today"] });
+          }}
+        />
+      )}
 
       {data.total > PAGE_SIZE && (
         <div className="flex items-center justify-between text-xs font-mono">
