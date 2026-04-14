@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   project_id UUID NOT NULL REFERENCES projects(id),
   work_type TEXT NOT NULL CHECK (work_type IN (
     'spec', 'build', 'debug', 'polish',
-    'devops', 'arch', 'client', 'meeting', 'admin', 'other'
+    'arch', 'client', 'meeting', 'admin', 'other'
   )),
   custom_work_type_id UUID REFERENCES custom_work_types(id),
   started_at TIMESTAMPTZ NOT NULL,
@@ -220,3 +220,13 @@ ALTER TABLE custom_work_types DROP CONSTRAINT IF EXISTS custom_work_types_create
 ALTER TABLE custom_work_types
   ADD CONSTRAINT custom_work_types_created_by_fkey
   FOREIGN KEY (created_by) REFERENCES koku_users(id) ON DELETE SET NULL;
+
+-- 2026-04-14: remove 'devops' work type, rename displayed 'arch' to Infrastructure.
+-- Existing devops sessions are remapped to 'other' before the CHECK is tightened.
+UPDATE sessions SET work_type = 'other' WHERE work_type = 'devops';
+ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_work_type_check;
+ALTER TABLE sessions ADD CONSTRAINT sessions_work_type_check
+  CHECK (work_type IN (
+    'spec', 'build', 'debug', 'polish',
+    'arch', 'client', 'meeting', 'admin', 'other'
+  ));

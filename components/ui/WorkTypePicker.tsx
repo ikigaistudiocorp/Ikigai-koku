@@ -17,7 +17,6 @@ type Props = {
 
 const AI_CYCLE: WorkType[] = ["spec", "build", "debug", "polish"];
 const OTHER: WorkType[] = [
-  "devops",
   "arch",
   "client",
   "meeting",

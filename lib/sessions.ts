@@ -5,7 +5,6 @@ export const VALID_WORK_TYPES: readonly WorkType[] = [
   "build",
   "debug",
   "polish",
-  "devops",
   "arch",
   "client",
   "meeting",

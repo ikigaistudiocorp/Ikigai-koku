@@ -11,7 +11,6 @@ export type WorkType =
   | "build"
   | "debug"
   | "polish"
-  | "devops"
   | "arch"
   | "client"
   | "meeting"
@@ -66,16 +65,9 @@ export const WORK_TYPE_META: Record<WorkType, WorkTypeMetaEntry> = {
     group: "ai_cycle",
     emoji: "✨",
   },
-  devops: {
-    label_es: "DevOps",
-    label_en: "DevOps",
-    color: "bg-orange-500",
-    group: "other",
-    emoji: "⚙️",
-  },
   arch: {
-    label_es: "Arquitectura",
-    label_en: "Architecture",
+    label_es: "Infraestructura",
+    label_en: "Infrastructure",
     color: "bg-teal-500",
     group: "other",
     emoji: "🏗️",
