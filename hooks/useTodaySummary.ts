@@ -7,6 +7,13 @@ export type TodaySession = {
   work_type: string;
   custom_work_type_name: string | null;
   custom_work_type_color: string | null;
+  edited_at: string | null;
+  edit_history: Array<{
+    at: string;
+    by_user_id: string;
+    by_user_name: string | null;
+    changes: Record<string, { from: string | null; to: string | null }>;
+  }> | null;
   duration_minutes: number | null;
   started_at: string;
   ended_at: string | null;

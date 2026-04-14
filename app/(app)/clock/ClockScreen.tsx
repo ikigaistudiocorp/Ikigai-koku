@@ -10,8 +10,8 @@ import { useClockStore } from "@/store/clockStore";
 import { useTranslation } from "@/lib/i18n";
 import { WORK_TYPE_META, type WorkType } from "@/types";
 import { WorkTypeDot } from "@/components/ui/WorkTypeDot";
+import { SessionEditModal, type EditHistoryEntry } from "@/components/SessionEditModal";
 import { StopTimeModal } from "@/components/StopTimeModal";
-import { PlannedSessions } from "@/components/PlannedSessions";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -108,28 +108,6 @@ export function ClockScreen() {
     await startSession(body);
   };
 
-  const onStartFromPlan = async (row: {
-    id: string;
-    project_id: string;
-    work_type: string;
-    custom_work_type_id: string | null;
-  }) => {
-    if (active) return;
-    const body =
-      row.custom_work_type_id
-        ? {
-            project_id: row.project_id,
-            work_type: "other" as const,
-            custom_work_type_id: row.custom_work_type_id,
-          }
-        : { project_id: row.project_id, work_type: row.work_type };
-    await startSession(body);
-    await fetch(`/api/planned-sessions/${row.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-    qc.invalidateQueries({ queryKey: ["planned-sessions"] });
-  };
 
   const onSwitch = async (v: PickerValue) => {
     if (!active) return;
@@ -419,8 +397,6 @@ export function ClockScreen() {
 
       <TodayList today={today} />
 
-      <PlannedSessions onStartFromPlan={onStartFromPlan} disabled={!!active || busy} />
-
       <BottomSheet
         open={sheet === "project"}
         onClose={() => setSheet(null)}
@@ -459,6 +435,16 @@ function OfflineBanner() {
 
 function TodayList({ today }: { today: ReturnType<typeof useTodaySummary>["data"] }) {
   const { t, language } = useTranslation();
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState<
+    | {
+        id: string;
+        started_at: string;
+        ended_at: string | null;
+        edit_history: EditHistoryEntry[];
+      }
+    | null
+  >(null);
   if (!today || today.sessions.length === 0) {
     return (
       <p className="text-center text-sm text-ikigai-dark/60 dark:text-ikigai-cream/60">
@@ -467,44 +453,84 @@ function TodayList({ today }: { today: ReturnType<typeof useTodaySummary>["data"
     );
   }
   return (
-    <ul className="space-y-2">
-      {today.sessions.map((s) => {
-        const minutes = s.duration_minutes ?? 0;
-        const h = Math.floor(minutes / 60);
-        const m = minutes % 60;
-        const meta = WORK_TYPE_META[s.work_type as WorkType];
-        return (
-          <li
-            key={s.id}
-            className="flex items-center gap-3 rounded-lg bg-white dark:bg-ikigai-card px-3 py-2 border border-black/[0.05] dark:border-white/[0.06]"
-          >
-            <WorkTypeDot
-              workType={s.work_type}
-              customColor={s.custom_work_type_color}
-            />
-            <span className="text-lg" aria-hidden>{meta?.emoji ?? "•"}</span>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm truncate">
-                {s.custom_work_type_name ??
-                  (language === "en" ? meta?.label_en : meta?.label_es) ??
-                  s.work_type}{" "}
-                <span className="text-ikigai-dark/50 dark:text-ikigai-cream/50">·</span>{" "}
-                <span className="text-ikigai-dark/70 dark:text-ikigai-cream/70">
-                  {s.project_name}
-                </span>
-              </div>
-              {s.note && (
-                <div className="text-xs text-ikigai-dark/50 dark:text-ikigai-cream/50 truncate">
-                  {s.note}
+    <>
+      <ul className="space-y-2">
+        {today.sessions.map((s) => {
+          const minutes = s.duration_minutes ?? 0;
+          const h = Math.floor(minutes / 60);
+          const m = minutes % 60;
+          const meta = WORK_TYPE_META[s.work_type as WorkType];
+          return (
+            <li
+              key={s.id}
+              className="flex items-center gap-3 rounded-lg bg-white dark:bg-ikigai-card px-3 py-2 border border-black/[0.05] dark:border-white/[0.06]"
+            >
+              <WorkTypeDot
+                workType={s.work_type}
+                customColor={s.custom_work_type_color}
+              />
+              <span className="text-lg" aria-hidden>{meta?.emoji ?? "•"}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm truncate">
+                  {s.custom_work_type_name ??
+                    (language === "en" ? meta?.label_en : meta?.label_es) ??
+                    s.work_type}{" "}
+                  <span className="text-ikigai-dark/50 dark:text-ikigai-cream/50">·</span>{" "}
+                  <span className="text-ikigai-dark/70 dark:text-ikigai-cream/70">
+                    {s.project_name}
+                  </span>
                 </div>
+                {s.note && (
+                  <div className="text-xs text-ikigai-dark/50 dark:text-ikigai-cream/50 truncate">
+                    {s.note}
+                  </div>
+                )}
+              </div>
+              <div className="font-mono text-sm tabular-nums">
+                {h}h {m}m
+              </div>
+              {s.edited_at && (
+                <span
+                  title={t("session_flag_edited")}
+                  aria-label={t("session_flag_edited")}
+                  className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400"
+                />
               )}
-            </div>
-            <div className="font-mono text-sm tabular-nums">
-              {h}h {m}m
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+              <button
+                type="button"
+                onClick={() =>
+                  setEditing({
+                    id: s.id,
+                    started_at: s.started_at,
+                    ended_at: s.ended_at,
+                    edit_history: (s.edit_history ?? []) as EditHistoryEntry[],
+                  })
+                }
+                aria-label={t("session_edit_title")}
+                className="inline-flex items-center justify-center w-7 h-7 rounded-full hover:bg-black/[0.06] dark:hover:bg-white/[0.06] text-ikigai-dark/70 dark:text-ikigai-cream/70"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z" />
+                </svg>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {editing && (
+        <SessionEditModal
+          sessionId={editing.id}
+          startedAt={editing.started_at}
+          endedAt={editing.ended_at}
+          editHistory={editing.edit_history}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["sessions", "today"] });
+            qc.invalidateQueries({ queryKey: ["sessions-history"] });
+          }}
+        />
+      )}
+    </>
   );
 }

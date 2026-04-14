@@ -75,7 +75,7 @@ export const WORK_TYPE_META: Record<WorkType, WorkTypeMetaEntry> = {
   client: {
     label_es: "Cliente",
     label_en: "Client Work",
-    color: "bg-emerald-500",
+    color: "bg-orange-500",
     group: "other",
     emoji: "🤝",
   },

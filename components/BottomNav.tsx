@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 
 const TABS: Array<{ href: string; key: string; icon: string }> = [
   { href: "/clock", key: "nav_clock", icon: "⏱" },
+  { href: "/todo", key: "nav_todo", icon: "📝" },
   { href: "/dashboard", key: "nav_dashboard", icon: "📊" },
   { href: "/projects", key: "nav_projects", icon: "🗂" },
   { href: "/reports", key: "nav_reports", icon: "📋" },
@@ -20,7 +21,7 @@ export function BottomNav() {
       className="fixed bottom-0 inset-x-0 z-20 bg-white/90 dark:bg-ikigai-card/90 backdrop-blur border-t border-black/[0.06] dark:border-white/[0.06]"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {TABS.map((tab) => {
           const active =
             pathname === tab.href || pathname?.startsWith(tab.href + "/");

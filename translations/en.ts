@@ -7,6 +7,8 @@ export const en = {
   nav_projects: "Projects",
   nav_reports: "Reports",
   nav_settings: "Settings",
+  nav_todo: "To-Do",
+  planned_already_active: "Stop the current session first.",
 
   clock_greeting_morning: "Good morning",
   clock_greeting_afternoon: "Good afternoon",

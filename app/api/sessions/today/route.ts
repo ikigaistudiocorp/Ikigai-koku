@@ -11,6 +11,8 @@ export async function GET() {
     work_type: string;
     custom_work_type_name: string | null;
     custom_work_type_color: string | null;
+    edited_at: string | null;
+    edit_history: unknown;
     duration_minutes: number | null;
     started_at: string;
     ended_at: string | null;
@@ -20,6 +22,7 @@ export async function GET() {
   }>(
     `SELECT s.id, s.work_type, s.duration_minutes,
             s.started_at, s.ended_at, s.note, s.feedback,
+            s.edited_at, s.edit_history,
             p.name AS project_name,
             c.name AS custom_work_type_name, c.color AS custom_work_type_color
        FROM sessions s
