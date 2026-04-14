@@ -66,6 +66,9 @@ export const es = {
   login_register_link: "Regístrate",
   login_back_to_signin: "Volver a iniciar sesión",
 
+  offline_banner: "Sin conexión",
+  offline_detail: "Los datos se sincronizarán al reconectar",
+
   common_cancel: "Cancelar",
   common_save: "Guardar",
   common_loading: "Cargando...",
