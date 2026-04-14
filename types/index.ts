@@ -120,6 +120,7 @@ export type KokuUser = {
   after_hours_start: string;
   after_hours_end: string;
   weekly_mirror_enabled: boolean;
+  baseline_completed: boolean;
   created_at: string;
 };
 
