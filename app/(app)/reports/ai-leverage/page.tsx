@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "@/lib/i18n";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Card } from "@/components/ui/Card";
 import { AILeverageBar } from "@/components/AILeverageBar";
 import type { Project } from "@/types";
@@ -13,11 +14,6 @@ type MyAnalytics = {
     debug_pct: number;
     polish_pct: number;
   };
-  weekly_hours: {
-    week_start: string;
-    by_work_type: Record<string, number>;
-    is_baseline: boolean;
-  }[];
 };
 
 type ProjectAnalytics = {
@@ -28,21 +24,61 @@ type ProjectAnalytics = {
     debug_pct: number;
     polish_pct: number;
   };
-  feedback_summary: {
-    difficult_count: number;
-    flowed_count: number;
-    blocked_count: number;
-  };
+};
+
+type FeedbackCorrelation = {
+  difficult: { session_count: number; leverage: { debug_pct: number } };
+  flowed: { session_count: number; leverage: { debug_pct: number } };
+  blocked: { session_count: number; leverage: { debug_pct: number } };
+};
+
+type TeamAnalytics = {
+  members: Array<{
+    user_id: string;
+    name: string;
+    ai_leverage_ratio: {
+      spec_pct: number;
+      build_pct: number;
+      debug_pct: number;
+      polish_pct: number;
+    };
+    this_week_minutes: number;
+  }>;
 };
 
 export default function AILeverageReportPage() {
   const { t } = useTranslation();
+  const { data: me } = useCurrentUser();
+  const isOwner = me?.kokuUser?.role === "owner";
 
   const { data: my } = useQuery<MyAnalytics>({
     queryKey: ["analytics", "my"],
     queryFn: async () => {
       const r = await fetch("/api/analytics/my", { credentials: "include" });
       if (!r.ok) throw new Error("my");
+      return r.json();
+    },
+    staleTime: 30_000,
+  });
+
+  const { data: correlation } = useQuery<FeedbackCorrelation>({
+    queryKey: ["feedback-correlation"],
+    queryFn: async () => {
+      const r = await fetch("/api/analytics/feedback-correlation", {
+        credentials: "include",
+      });
+      if (!r.ok) throw new Error("correlation");
+      return r.json();
+    },
+    staleTime: 30_000,
+  });
+
+  const { data: team } = useQuery<TeamAnalytics>({
+    queryKey: ["analytics", "team"],
+    enabled: isOwner,
+    queryFn: async () => {
+      const r = await fetch("/api/analytics/team", { credentials: "include" });
+      if (!r.ok) throw new Error("team");
       return r.json();
     },
     staleTime: 30_000,
@@ -79,6 +115,10 @@ export default function AILeverageReportPage() {
     },
   });
 
+  const hasCorrelation =
+    !!correlation &&
+    correlation.difficult.session_count + correlation.flowed.session_count > 0;
+
   return (
     <main className="flex-1 px-5 py-6 space-y-4">
       <h1 className="text-2xl font-heading">{t("reports_ai_leverage")}</h1>
@@ -105,6 +145,48 @@ export default function AILeverageReportPage() {
         </Card>
       )}
 
+      <Card padding="md" className="space-y-3">
+        <h2 className="font-mono text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
+          {t("ai_feedback_correlation_title")}
+        </h2>
+        {hasCorrelation ? (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
+                😤 {t("ai_feedback_difficult")}{" "}
+                <span className="font-mono">
+                  ({correlation.difficult.session_count})
+                </span>
+              </div>
+              <div className="text-2xl font-mono text-ikigai-rose tabular-nums">
+                {correlation.difficult.leverage.debug_pct}%
+              </div>
+              <div className="text-[10px] uppercase tracking-wider text-ikigai-dark/50 dark:text-ikigai-cream/50">
+                {t("ai_feedback_debug_share")}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
+                😌 {t("ai_feedback_flowed")}{" "}
+                <span className="font-mono">
+                  ({correlation.flowed.session_count})
+                </span>
+              </div>
+              <div className="text-2xl font-mono text-ikigai-emerald tabular-nums">
+                {correlation.flowed.leverage.debug_pct}%
+              </div>
+              <div className="text-[10px] uppercase tracking-wider text-ikigai-dark/50 dark:text-ikigai-cream/50">
+                {t("ai_feedback_debug_share")}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
+            {t("ai_feedback_correlation_empty")}
+          </p>
+        )}
+      </Card>
+
       {projectAnalytics && projectAnalytics.length > 0 && (
         <Card padding="md" className="space-y-3">
           <h2 className="font-mono text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
@@ -130,6 +212,47 @@ export default function AILeverageReportPage() {
               </li>
             ))}
           </ul>
+        </Card>
+      )}
+
+      {isOwner && team && team.members.length > 0 && (
+        <Card padding="md" className="space-y-3">
+          <h2 className="font-mono text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
+            {t("ai_team_comparison")}
+          </h2>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-[11px] text-ikigai-dark/60 dark:text-ikigai-cream/60">
+                <th className="py-1 pr-2 font-normal">Name</th>
+                <th className="py-1 pr-2 font-normal text-right">SPEC</th>
+                <th className="py-1 pr-2 font-normal text-right">BUILD</th>
+                <th className="py-1 pr-2 font-normal text-right">DEBUG</th>
+                <th className="py-1 pr-2 font-normal text-right">POLISH</th>
+              </tr>
+            </thead>
+            <tbody>
+              {team.members.map((m) => (
+                <tr
+                  key={m.user_id}
+                  className="border-t border-black/[0.04] dark:border-white/[0.06]"
+                >
+                  <td className="py-1 pr-2 truncate">{m.name}</td>
+                  <td className="py-1 pr-2 text-right font-mono">
+                    {m.ai_leverage_ratio.spec_pct}%
+                  </td>
+                  <td className="py-1 pr-2 text-right font-mono">
+                    {m.ai_leverage_ratio.build_pct}%
+                  </td>
+                  <td className="py-1 pr-2 text-right font-mono">
+                    {m.ai_leverage_ratio.debug_pct}%
+                  </td>
+                  <td className="py-1 pr-2 text-right font-mono">
+                    {m.ai_leverage_ratio.polish_pct}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Card>
       )}
     </main>

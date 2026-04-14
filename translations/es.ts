@@ -161,6 +161,14 @@ export const es = {
   reports_summary_hours: "Horas totales",
   reports_summary_value: "Valor facturable",
 
+  ai_feedback_correlation_title: "Sensación vs. depuración",
+  ai_feedback_correlation_empty:
+    "Registra feedback de sesión para ver este patrón.",
+  ai_feedback_difficult: "Sesiones difíciles",
+  ai_feedback_flowed: "Sesiones fluidas",
+  ai_feedback_debug_share: "DEBUG promedio",
+  ai_team_comparison: "Comparación del equipo",
+
   common_cancel: "Cancelar",
   common_save: "Guardar",
   common_loading: "Cargando...",

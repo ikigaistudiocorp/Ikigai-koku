@@ -158,6 +158,14 @@ export const en = {
   reports_summary_hours: "Total hours",
   reports_summary_value: "Billable value",
 
+  ai_feedback_correlation_title: "How sessions felt vs DEBUG share",
+  ai_feedback_correlation_empty:
+    "Log session feedback to see this pattern.",
+  ai_feedback_difficult: "Difficult sessions",
+  ai_feedback_flowed: "Flowed sessions",
+  ai_feedback_debug_share: "Average DEBUG",
+  ai_team_comparison: "Team comparison",
+
   common_cancel: "Cancel",
   common_save: "Save",
   common_loading: "Loading...",
