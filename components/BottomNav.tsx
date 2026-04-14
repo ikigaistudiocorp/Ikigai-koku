@@ -17,7 +17,7 @@ export function BottomNav() {
   const pathname = usePathname();
   return (
     <nav
-      className="sticky bottom-0 inset-x-0 bg-white/90 dark:bg-[#242424]/90 backdrop-blur border-t border-black/[0.06] dark:border-white/[0.06]"
+      className="sticky bottom-0 inset-x-0 bg-white/90 dark:bg-ikigai-card/90 backdrop-blur border-t border-black/[0.06] dark:border-white/[0.06]"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="grid grid-cols-4">

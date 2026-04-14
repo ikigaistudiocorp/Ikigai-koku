@@ -57,6 +57,15 @@ export const en = {
   onboarding_week_label_one: "Last week",
   onboarding_saving: "Saving...",
 
+  login_name: "Name",
+  login_email: "Email",
+  login_password: "Password",
+  login_signin: "Sign in",
+  login_register: "Create account",
+  login_first_user_cta: "First user?",
+  login_register_link: "Register",
+  login_back_to_signin: "Back to sign in",
+
   common_cancel: "Cancel",
   common_save: "Save",
   common_loading: "Loading...",

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth-session";
-import { pool, query } from "@/lib/db";
+import { pool } from "@/lib/db";
 
 const BASELINE_PROJECT_NAME = "__koku_baseline";
 
@@ -84,26 +84,36 @@ export async function POST(req: Request) {
     }
 
     const monday = mondayOfThisWeek();
+    const userIdsCol: string[] = [];
+    const startedAtCol: string[] = [];
+    const endedAtCol: string[] = [];
+    const durationCol: number[] = [];
 
     for (const e of entries) {
       const weekStart = new Date(monday);
       weekStart.setUTCDate(weekStart.getUTCDate() - 7 * e.weeks_ago);
-      // 09:00 local (we approximate local-noon + -3 UTC offset doesn't matter
-      // for display; baseline rows are synthetic anyway).
       weekStart.setUTCHours(14, 0, 0, 0); // ~09:00 America/Panama (UTC-5)
       const durationMinutes = Math.round(e.hours * 60);
       const ended = new Date(weekStart.getTime() + durationMinutes * 60_000);
 
-      await client.query(
-        `INSERT INTO sessions (
-           user_id, project_id, work_type,
-           started_at, ended_at, duration_minutes,
-           is_active, is_baseline
-         )
-         VALUES ($1, $2, 'other', $3, $4, $5, false, true)`,
-        [e.user_id, baselineProjectId, weekStart.toISOString(), ended.toISOString(), durationMinutes]
-      );
+      userIdsCol.push(e.user_id);
+      startedAtCol.push(weekStart.toISOString());
+      endedAtCol.push(ended.toISOString());
+      durationCol.push(durationMinutes);
     }
+
+    // Single multi-row insert via UNNEST — one round-trip regardless of size.
+    await client.query(
+      `INSERT INTO sessions (
+         user_id, project_id, work_type,
+         started_at, ended_at, duration_minutes,
+         is_active, is_baseline
+       )
+       SELECT u, $1, 'other', s::timestamptz, e::timestamptz, d, false, true
+         FROM UNNEST($2::text[], $3::text[], $4::text[], $5::int[])
+           AS t(u, s, e, d)`,
+      [baselineProjectId, userIdsCol, startedAtCol, endedAtCol, durationCol]
+    );
 
     await client.query(
       `UPDATE koku_users SET baseline_completed = true WHERE id = ANY($1::text[])`,
@@ -118,9 +128,6 @@ export async function POST(req: Request) {
   } finally {
     client.release();
   }
-
-  // Reflect flags back to the server helper's cache.
-  void query;
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

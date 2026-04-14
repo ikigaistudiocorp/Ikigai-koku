@@ -21,7 +21,7 @@ export function Card({
     <div
       {...rest}
       className={cn(
-        "rounded-xl bg-white dark:bg-[#242424] shadow-sm border border-black/[0.04] dark:border-white/[0.06]",
+        "rounded-xl bg-white dark:bg-ikigai-card shadow-sm border border-black/[0.04] dark:border-white/[0.06]",
         paddings[padding],
         className
       )}

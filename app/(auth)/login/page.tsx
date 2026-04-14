@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signUp } from "@/lib/auth-client";
+import { useTranslation } from "@/lib/i18n";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/clock";
@@ -31,57 +34,65 @@ export default function LoginPage() {
       router.replace(next);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(err instanceof Error ? err.message : t("common_error"));
     } finally {
       setLoading(false);
     }
   };
 
+  const inputClasses =
+    "w-full h-14 px-4 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900 text-base focus:outline-none focus:ring-2 focus:ring-ikigai-purple";
+
   return (
     <main className="flex-1 grid place-items-center px-6 py-12">
       <div className="w-full max-w-sm space-y-8">
+        <div className="flex justify-end">
+          <LanguageToggle />
+        </div>
         <div className="text-center space-y-1">
-          <h1 className="text-5xl font-heading text-ikigai-purple">Koku</h1>
+          <h1 className="text-5xl font-heading text-ikigai-purple">
+            {t("app_name")}
+          </h1>
           <p className="font-mono text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
-            刻 — El Tiempo
+            {t("app_tagline")}
           </p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           {mode === "register" && (
             <label className="block">
-              <span className="text-sm mb-1 block">Nombre / Name</span>
+              <span className="text-sm mb-1 block">{t("login_name")}</span>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full h-14 px-4 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900 text-base focus:outline-none focus:ring-2 focus:ring-ikigai-purple"
+                className={inputClasses}
                 autoComplete="name"
               />
             </label>
           )}
           <label className="block">
-            <span className="text-sm mb-1 block">Email</span>
+            <span className="text-sm mb-1 block">{t("login_email")}</span>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-14 px-4 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900 text-base focus:outline-none focus:ring-2 focus:ring-ikigai-purple"
+              className={inputClasses}
               autoComplete="email"
               autoCapitalize="none"
             />
           </label>
           <label className="block">
-            <span className="text-sm mb-1 block">Contraseña / Password</span>
+            <span className="text-sm mb-1 block">{t("login_password")}</span>
             <input
               type="password"
               required
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full h-14 px-4 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900 text-base focus:outline-none focus:ring-2 focus:ring-ikigai-purple"
+              className={inputClasses}
               autoComplete={mode === "signin" ? "current-password" : "new-password"}
             />
           </label>
@@ -100,14 +111,14 @@ export default function LoginPage() {
             {loading
               ? "..."
               : mode === "signin"
-                ? "Iniciar sesión"
-                : "Crear cuenta"}
+                ? t("login_signin")
+                : t("login_register")}
           </button>
 
           <p className="text-center text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
             {mode === "signin" ? (
               <>
-                ¿Primer usuario?{" "}
+                {t("login_first_user_cta")}{" "}
                 <button
                   type="button"
                   onClick={() => {
@@ -116,7 +127,7 @@ export default function LoginPage() {
                   }}
                   className="underline"
                 >
-                  Regístrate
+                  {t("login_register_link")}
                 </button>
               </>
             ) : (
@@ -128,7 +139,7 @@ export default function LoginPage() {
                 }}
                 className="underline"
               >
-                Volver a iniciar sesión
+                {t("login_back_to_signin")}
               </button>
             )}
           </p>
