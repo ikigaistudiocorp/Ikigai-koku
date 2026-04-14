@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -13,8 +14,16 @@ function initials(name: string): string {
 }
 
 export function TopBar() {
-  const { t } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const { data: me } = useCurrentUser();
+
+  const serverLang = me?.kokuUser?.preferred_language;
+  useEffect(() => {
+    if ((serverLang === "es" || serverLang === "en") && serverLang !== language) {
+      setLanguage(serverLang);
+    }
+  }, [serverLang, language, setLanguage]);
+
   return (
     <header
       className="sticky top-0 inset-x-0 z-10 bg-ikigai-cream/90 dark:bg-ikigai-dark/90 backdrop-blur border-b border-black/[0.04] dark:border-white/[0.06]"

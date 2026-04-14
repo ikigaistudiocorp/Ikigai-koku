@@ -18,7 +18,7 @@ async function saveSettings(patch: Record<string, unknown>) {
 }
 
 export default function SettingsPage() {
-  const { t } = useTranslation();
+  const { t, setLanguage } = useTranslation();
   const { data: me, refetch } = useCurrentUser();
   const router = useRouter();
 
@@ -45,7 +45,11 @@ export default function SettingsPage() {
         <select
           key={`lang-${ku.preferred_language}`}
           defaultValue={ku.preferred_language}
-          onChange={(e) => save({ preferred_language: e.target.value })}
+          onChange={(e) => {
+            const lang = e.target.value as "es" | "en";
+            setLanguage(lang);
+            save({ preferred_language: lang });
+          }}
           className="w-full h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
         >
           <option value="es">Español</option>
