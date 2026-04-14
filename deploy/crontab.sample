@@ -1,5 +1,10 @@
-# Koku crontab. Install with `crontab -e` on the production VPS.
-# CRON_SECRET must match .env.local (or the PM2 process env).
+# Koku crontab. Install with `crontab deploy/crontab.sample` on the VPS.
+#
+# cron does NOT inherit the user shell environment, so CRON_SECRET must be
+# declared inside the crontab itself. Replace the placeholder below with the
+# value from /opt/ikigai-koku/.env.local before installing.
+
+CRON_SECRET=replace-with-value-from-env-local
 
 # Session notifications — every 30 minutes.
 */30 * * * * curl -fsS -H "X-Cron-Secret: $CRON_SECRET" https://time.ikigaistudio.ai/api/cron/notifications >> /var/log/koku-cron.log 2>&1
