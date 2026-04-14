@@ -223,7 +223,7 @@ export default function AILeverageReportPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-[11px] text-ikigai-dark/60 dark:text-ikigai-cream/60">
-                <th className="py-1 pr-2 font-normal">Name</th>
+                <th className="py-1 pr-2 font-normal">{t("reports_col_name")}</th>
                 <th className="py-1 pr-2 font-normal text-right">SPEC</th>
                 <th className="py-1 pr-2 font-normal text-right">BUILD</th>
                 <th className="py-1 pr-2 font-normal text-right">DEBUG</th>

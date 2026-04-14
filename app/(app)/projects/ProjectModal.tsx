@@ -127,7 +127,7 @@ export function ProjectModal({
 
         {initial?.id && (
           <label className="block">
-            <span className="text-sm mb-1 block">Status</span>
+            <span className="text-sm mb-1 block">{t("projects_form_status")}</span>
             <select
               value={status}
               onChange={(e) =>

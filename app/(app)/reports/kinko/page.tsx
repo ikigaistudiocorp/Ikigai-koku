@@ -126,10 +126,10 @@ export default function KinkoExportPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left border-b border-black/[0.06] dark:border-white/[0.06]">
-                <th className="py-1 pr-3 font-normal">Date</th>
-                <th className="py-1 pr-3 font-normal">Dev</th>
-                <th className="py-1 pr-3 font-normal">Project</th>
-                <th className="py-1 pr-3 font-normal">Work</th>
+                <th className="py-1 pr-3 font-normal">{t("reports_kinko_col_date")}</th>
+                <th className="py-1 pr-3 font-normal">{t("reports_kinko_col_dev")}</th>
+                <th className="py-1 pr-3 font-normal">{t("reports_kinko_col_project")}</th>
+                <th className="py-1 pr-3 font-normal">{t("reports_kinko_col_work")}</th>
                 <th className="py-1 pr-3 font-normal text-right">h</th>
                 <th className="py-1 pr-3 font-normal text-right">$</th>
               </tr>

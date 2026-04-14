@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { useTranslation } from "@/lib/i18n";
 
 type Member = { id: string; name: string; email: string; role: string };
 
 export function UsersAdmin({ members }: { members: Member[] }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -50,9 +52,9 @@ export function UsersAdmin({ members }: { members: Member[] }) {
   return (
     <main className="flex-1 px-5 py-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-heading">Team</h1>
+        <h1 className="text-2xl font-heading">{t("admin_users_title")}</h1>
         <Button size="sm" onClick={() => setOpen(true)}>
-          + New
+          + {t("admin_users_new")}
         </Button>
       </div>
 
@@ -80,14 +82,14 @@ export function UsersAdmin({ members }: { members: Member[] }) {
         <Card padding="md" className="space-y-3">
           <form onSubmit={submit} className="space-y-3">
             <input
-              placeholder="Name"
+              placeholder={t("admin_users_form_name")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
             />
             <input
-              placeholder="Email"
+              placeholder={t("admin_users_form_email")}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -95,7 +97,7 @@ export function UsersAdmin({ members }: { members: Member[] }) {
               className="w-full h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
             />
             <input
-              placeholder="Temporary password"
+              placeholder={t("admin_users_form_temp_password")}
               type="password"
               minLength={8}
               value={password}
@@ -112,9 +114,9 @@ export function UsersAdmin({ members }: { members: Member[] }) {
               }
               className="w-full h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
             >
-              <option value="developer">developer</option>
-              <option value="project_lead">project_lead</option>
-              <option value="owner">owner</option>
+              <option value="developer">{t("admin_users_role_developer")}</option>
+              <option value="project_lead">{t("admin_users_role_project_lead")}</option>
+              <option value="owner">{t("admin_users_role_owner")}</option>
             </select>
             {err && <p className="text-sm text-ikigai-rose">{err}</p>}
             <div className="flex gap-2">
@@ -124,10 +126,10 @@ export function UsersAdmin({ members }: { members: Member[] }) {
                 fullWidth
                 onClick={() => setOpen(false)}
               >
-                Cancel
+                {t("common_cancel")}
               </Button>
               <Button type="submit" loading={saving} fullWidth>
-                Create
+                {t("admin_users_form_create")}
               </Button>
             </div>
           </form>

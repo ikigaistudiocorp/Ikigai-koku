@@ -77,6 +77,7 @@ export const en = {
   projects_form_billable: "Billable",
   projects_form_hourly_rate: "Hourly rate (USD)",
   projects_form_members: "Team members",
+  projects_form_status: "Status",
   projects_status_active: "Active",
   projects_status_paused: "Paused",
   projects_status_archived: "Archived",
@@ -177,6 +178,19 @@ export const en = {
     "Delete {name}? This removes all their sessions and cannot be undone.",
   admin_users_self_badge: "you",
   admin_users_new_password: "New password (optional)",
+  admin_users_form_name: "Name",
+  admin_users_form_email: "Email",
+  admin_users_form_temp_password: "Temporary password",
+  admin_users_form_create: "Create",
+  admin_users_role_owner: "Owner",
+  admin_users_role_developer: "Developer",
+  admin_users_role_project_lead: "Project lead",
+
+  reports_col_name: "Name",
+  reports_kinko_col_date: "Date",
+  reports_kinko_col_dev: "Dev",
+  reports_kinko_col_project: "Project",
+  reports_kinko_col_work: "Work",
 
   admin_projects_delete: "Delete project",
   admin_projects_delete_confirm:

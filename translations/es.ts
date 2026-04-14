@@ -77,6 +77,7 @@ export const es = {
   projects_form_billable: "Facturable",
   projects_form_hourly_rate: "Tarifa por hora (USD)",
   projects_form_members: "Miembros del equipo",
+  projects_form_status: "Estado",
   projects_status_active: "Activo",
   projects_status_paused: "Pausado",
   projects_status_archived: "Archivado",
@@ -180,6 +181,19 @@ export const es = {
     "¿Eliminar a {name}? Esta acción borra todas sus sesiones y no se puede deshacer.",
   admin_users_self_badge: "tú",
   admin_users_new_password: "Nueva contraseña (opcional)",
+  admin_users_form_name: "Nombre",
+  admin_users_form_email: "Correo",
+  admin_users_form_temp_password: "Contraseña temporal",
+  admin_users_form_create: "Crear",
+  admin_users_role_owner: "Propietario",
+  admin_users_role_developer: "Desarrollador",
+  admin_users_role_project_lead: "Líder de proyecto",
+
+  reports_col_name: "Nombre",
+  reports_kinko_col_date: "Fecha",
+  reports_kinko_col_dev: "Dev",
+  reports_kinko_col_project: "Proyecto",
+  reports_kinko_col_work: "Trabajo",
 
   admin_projects_delete: "Eliminar proyecto",
   admin_projects_delete_confirm:
