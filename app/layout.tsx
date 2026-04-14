@@ -1,20 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Shippori_Antique_B1, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
-
-// Anti-flash theme init. Must run in <head> before first paint and
-// before React hydration, otherwise a light → dark (or vice versa)
-// flash happens and then Fast Refresh races with classList.add.
-// Uses a data-theme attribute (read by Tailwind's custom-variant)
-// instead of a class so React's className reconciliation never
-// fights the browser script.
-const DARK_MODE_INIT = `(function(){try{
-  var s = localStorage.getItem('koku-theme');
-  var dark = s ? s === 'dark'
-                : window.matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-}catch(e){}})();`;
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -69,10 +57,15 @@ export default function RootLayout({
       className={`${dmSans.variable} ${shippori.variable} ${jetbrains.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: DARK_MODE_INIT }} />
-      </head>
       <body className="min-h-full flex flex-col bg-ikigai-cream text-ikigai-dark dark:bg-ikigai-dark dark:text-ikigai-cream">
+        {/* Anti-flash theme init. next/script beforeInteractive is
+            hoisted into <head> by Next so it runs before React hydrates
+            and before the browser paints. A separate file avoids the
+            React 19 "script inside component" warning. */}
+        <Script
+          src="/koku-theme-init.js"
+          strategy="beforeInteractive"
+        />
         <Providers>{children}</Providers>
       </body>
     </html>

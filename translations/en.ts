@@ -186,4 +186,5 @@ export const en = {
   common_save: "Save",
   common_loading: "Loading...",
   common_error: "Something went wrong",
+  common_signout: "Sign out",
 } as const;

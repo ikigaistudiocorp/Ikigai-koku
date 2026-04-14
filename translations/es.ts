@@ -189,4 +189,5 @@ export const es = {
   common_save: "Guardar",
   common_loading: "Cargando...",
   common_error: "Algo salió mal",
+  common_signout: "Cerrar sesión",
 } as const;

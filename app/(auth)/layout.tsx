@@ -26,7 +26,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             alt="Koku"
             width={180}
             height={60}
-            className="mx-auto dark:invert"
+            className="mx-auto block dark:hidden"
+            priority
+          />
+          <Image
+            src="/images/koku-logo-dark.svg"
+            alt="Koku"
+            width={180}
+            height={60}
+            className="mx-auto hidden dark:block"
             priority
           />
           <div className="flex items-end justify-center gap-3 mt-3">
@@ -38,7 +46,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               alt="Ikigai Studio"
               width={120}
               height={40}
-              className="dark:invert"
+              className="block dark:hidden"
+            />
+            <Image
+              src="/images/ikigai-logo-dark.svg"
+              alt="Ikigai Studio"
+              width={120}
+              height={40}
+              className="hidden dark:block"
             />
           </div>
         </div>

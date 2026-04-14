@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTranslation } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { signOut } from "@/lib/auth-client";
 
 async function saveSettings(patch: Record<string, unknown>) {
   await fetch("/api/me/settings", {
@@ -17,6 +20,7 @@ async function saveSettings(patch: Record<string, unknown>) {
 export default function SettingsPage() {
   const { t } = useTranslation();
   const { data: me, refetch } = useCurrentUser();
+  const router = useRouter();
 
   if (!me?.kokuUser) return null;
 
@@ -83,24 +87,49 @@ export default function SettingsPage() {
       </Card>
 
       {isOwner && (
-        <Card padding="md" className="space-y-2">
-          <h2 className="text-xs uppercase tracking-wider font-mono text-ikigai-dark/60 dark:text-ikigai-cream/60">
+        <Card padding="md" className="space-y-1">
+          <h2 className="text-xs uppercase tracking-wider font-mono text-ikigai-dark/60 dark:text-ikigai-cream/60 mb-1">
             Admin
           </h2>
-          <Link href="/settings/work-types" className="block py-2 underline">
-            {t("settings_admin_work_types")}
+          <Link
+            href="/settings/users"
+            className="flex items-center justify-between py-2 border-t border-black/[0.05] dark:border-white/[0.06]"
+          >
+            <span>{t("settings_admin_users")}</span>
+            <span className="text-ikigai-purple">→</span>
+          </Link>
+          <Link
+            href="/settings/work-types"
+            className="flex items-center justify-between py-2 border-t border-black/[0.05] dark:border-white/[0.06]"
+          >
+            <span>{t("settings_admin_work_types")}</span>
+            <span className="text-ikigai-purple">→</span>
           </Link>
         </Card>
       )}
 
-      <Card padding="md" className="space-y-1">
+      <Card padding="md" className="space-y-3">
         <h2 className="text-xs uppercase tracking-wider font-mono text-ikigai-dark/60 dark:text-ikigai-cream/60">
           {t("settings_account")}
         </h2>
-        <p className="text-sm">{me.user.name}</p>
-        <p className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
-          {me.user.email}
-        </p>
+        <div>
+          <p className="text-sm">{me.user.name}</p>
+          <p className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
+            {me.user.email}
+          </p>
+        </div>
+        <Button
+          variant="danger"
+          size="sm"
+          fullWidth
+          onClick={async () => {
+            await signOut();
+            router.replace("/login");
+            router.refresh();
+          }}
+        >
+          {t("common_signout")}
+        </Button>
       </Card>
     </main>
   );

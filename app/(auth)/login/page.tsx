@@ -3,8 +3,8 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogIn, Mail, Lock, User } from "lucide-react";
-import { signIn, signUp } from "@/lib/auth-client";
+import { LogIn, Mail, Lock } from "lucide-react";
+import { signIn } from "@/lib/auth-client";
 import { useTranslation } from "@/lib/i18n";
 
 export default function LoginPage() {
@@ -21,9 +21,7 @@ function LoginInner() {
   const params = useSearchParams();
   const next = params.get("next") || "/clock";
 
-  const [mode, setMode] = useState<"signin" | "register">("signin");
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,13 +31,8 @@ function LoginInner() {
     setError(null);
     setLoading(true);
     try {
-      if (mode === "signin") {
-        const res = await signIn.email({ email, password });
-        if (res.error) throw new Error(res.error.message || "signin_failed");
-      } else {
-        const res = await signUp.email({ email, name, password });
-        if (res.error) throw new Error(res.error.message || "signup_failed");
-      }
+      const res = await signIn.email({ email, password });
+      if (res.error) throw new Error(res.error.message || "signin_failed");
       router.replace(next);
       router.refresh();
     } catch (err) {
@@ -61,7 +54,7 @@ function LoginInner() {
       className="bg-white dark:bg-ikigai-card border border-black/[0.06] dark:border-white/[0.06] rounded-2xl p-8 space-y-6 shadow-lg"
     >
       <h2 className="text-xl font-medium text-ikigai-dark dark:text-ikigai-cream text-center">
-        {mode === "signin" ? t("login_signin") : t("login_register")}
+        {t("login_signin")}
       </h2>
 
       {error && (
@@ -71,29 +64,6 @@ function LoginInner() {
       )}
 
       <div className="space-y-4">
-        {mode === "register" && (
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-ikigai-dark/70 dark:text-ikigai-cream/70 mb-1.5"
-            >
-              {t("login_name")}
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ikigai-dark/30 dark:text-ikigai-cream/30" />
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className={inputShell}
-                autoComplete="name"
-              />
-            </div>
-          </div>
-        )}
-
         <div>
           <label
             htmlFor="email"
@@ -135,7 +105,7 @@ function LoginInner() {
               minLength={8}
               placeholder="••••••••"
               className={inputShell}
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              autoComplete="current-password"
             />
           </div>
         </div>
@@ -151,39 +121,10 @@ function LoginInner() {
         ) : (
           <>
             <LogIn className="w-4 h-4" />
-            {mode === "signin" ? t("login_signin") : t("login_register")}
+            {t("login_signin")}
           </>
         )}
       </button>
-
-      <p className="text-center text-sm text-ikigai-dark/50 dark:text-ikigai-cream/50 font-light">
-        {mode === "signin" ? (
-          <>
-            {t("login_first_user_cta")}{" "}
-            <button
-              type="button"
-              onClick={() => {
-                setMode("register");
-                setError(null);
-              }}
-              className="text-ikigai-purple hover:underline"
-            >
-              {t("login_register_link")}
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setMode("signin");
-              setError(null);
-            }}
-            className="text-ikigai-purple hover:underline"
-          >
-            {t("login_back_to_signin")}
-          </button>
-        )}
-      </p>
     </motion.form>
   );
 }
