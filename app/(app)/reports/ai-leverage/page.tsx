@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Card } from "@/components/ui/Card";
 import { AILeverageBar } from "@/components/AILeverageBar";
+import { WorkTypeLegend } from "@/components/ui/WorkTypeLegend";
 import type { Project } from "@/types";
 
 type MyAnalytics = {
@@ -189,9 +190,12 @@ export default function AILeverageReportPage() {
 
       {projectAnalytics && projectAnalytics.length > 0 && (
         <Card padding="md" className="space-y-3">
-          <h2 className="font-mono text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
-            {t("nav_projects")}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-mono text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
+              {t("nav_projects")}
+            </h2>
+            <WorkTypeLegend />
+          </div>
           <ul className="space-y-3">
             {projectAnalytics.map(({ project, analytics }) => (
               <li key={project.id} className="space-y-1">

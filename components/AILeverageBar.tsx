@@ -2,6 +2,7 @@
 
 import { WORK_TYPE_META, AI_CYCLE_WORK_TYPES, type WorkType } from "@/types";
 import { cn } from "@/lib/cn";
+import { useTranslation } from "@/lib/i18n";
 
 // Compact 4-segment stacked bar. Expects minutes per AI-cycle work type;
 // non-AI types are ignored by design (spec defines the ratio this way).
@@ -12,6 +13,7 @@ export function AILeverageBar({
   minutesByType: Record<string, number>;
   className?: string;
 }) {
+  const { language } = useTranslation();
   const cycle = AI_CYCLE_WORK_TYPES.map((w) => ({
     w,
     m: minutesByType[w] ?? 0,
@@ -39,7 +41,7 @@ export function AILeverageBar({
             key={w}
             className={cn("h-full", WORK_TYPE_META[w as WorkType].color)}
             style={{ width: `${pct}%` }}
-            title={`${WORK_TYPE_META[w as WorkType].label_es} ${Math.round(pct)}%`}
+            title={`${language === "en" ? WORK_TYPE_META[w as WorkType].label_en : WORK_TYPE_META[w as WorkType].label_es} ${Math.round(pct)}%`}
           />
         );
       })}
