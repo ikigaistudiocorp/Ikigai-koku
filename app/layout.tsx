@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Shippori_Antique_B1, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { DarkModeInit } from "@/components/DarkModeInit";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -53,6 +54,9 @@ export default function RootLayout({
       className={`${dmSans.variable} ${shippori.variable} ${jetbrains.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <DarkModeInit />
+      </head>
       <body className="min-h-full flex flex-col bg-ikigai-cream text-ikigai-dark dark:bg-ikigai-dark dark:text-ikigai-cream">
         <Providers>{children}</Providers>
       </body>
