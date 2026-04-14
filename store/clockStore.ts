@@ -25,6 +25,6 @@ export const useClockStore = create<State>()(
       pendingStop: null,
       setPendingStop: (p) => set({ pendingStop: p }),
     }),
-    { name: "koku-clock" }
+    { name: "koku-clock", skipHydration: true }
   )
 );

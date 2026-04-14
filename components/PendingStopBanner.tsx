@@ -22,6 +22,9 @@ export function PendingStopBanner() {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { isOnline } = useNetworkStatus();
+  useEffect(() => {
+    void useClockStore.persist.rehydrate();
+  }, []);
   const pending = useClockStore((s) => s.pendingStop);
   const setPending = useClockStore((s) => s.setPendingStop);
   const attempting = useRef(false);

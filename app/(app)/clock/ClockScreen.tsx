@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useActiveSession } from "@/hooks/useActiveSession";
 import { useTodaySummary } from "@/hooks/useTodaySummary";
@@ -47,6 +47,9 @@ export function ClockScreen() {
   const { data: today } = useTodaySummary();
   const { data: projectsData } = useProjects();
 
+  useEffect(() => {
+    void useClockStore.persist.rehydrate();
+  }, []);
   const storedProject = useClockStore((s) => s.selectedProjectId);
   const setStoredProject = useClockStore((s) => s.setSelectedProjectId);
   const setPendingStop = useClockStore((s) => s.setPendingStop);
