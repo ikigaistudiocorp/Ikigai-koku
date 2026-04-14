@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "@/lib/i18n";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -14,15 +14,18 @@ function initials(name: string): string {
 }
 
 export function TopBar() {
-  const { t, language, setLanguage } = useTranslation();
+  const { t, setLanguage } = useTranslation();
   const { data: me } = useCurrentUser();
 
   const serverLang = me?.kokuUser?.preferred_language;
+  const syncedOnce = useRef(false);
   useEffect(() => {
-    if ((serverLang === "es" || serverLang === "en") && serverLang !== language) {
+    if (syncedOnce.current) return;
+    if (serverLang === "es" || serverLang === "en") {
       setLanguage(serverLang);
+      syncedOnce.current = true;
     }
-  }, [serverLang, language, setLanguage]);
+  }, [serverLang, setLanguage]);
 
   return (
     <header
