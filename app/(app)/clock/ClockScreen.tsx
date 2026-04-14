@@ -50,6 +50,8 @@ export function ClockScreen() {
   useEffect(() => {
     void useClockStore.persist.rehydrate();
   }, []);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const storedProject = useClockStore((s) => s.selectedProjectId);
   const setStoredProject = useClockStore((s) => s.setSelectedProjectId);
   const setPendingStop = useClockStore((s) => s.setPendingStop);
@@ -327,7 +329,7 @@ export function ClockScreen() {
 
       <header className="space-y-1">
         <h1 className="text-3xl font-heading text-ikigai-purple">
-          {t(greetingKey())}
+          {mounted ? t(greetingKey()) : "\u00A0"}
         </h1>
         <p className="text-sm text-ikigai-dark/60 dark:text-ikigai-cream/60 font-mono">
           {today && today.session_count > 0
