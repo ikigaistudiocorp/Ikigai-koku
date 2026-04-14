@@ -6,6 +6,7 @@ export type TodaySession = {
   id: string;
   work_type: string;
   custom_work_type_name: string | null;
+  custom_work_type_color: string | null;
   duration_minutes: number | null;
   started_at: string;
   ended_at: string | null;

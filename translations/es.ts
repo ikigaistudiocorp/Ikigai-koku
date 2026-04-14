@@ -31,6 +31,14 @@ export const es = {
 
   worktype_group_ai: "Ciclo de Desarrollo IA",
   worktype_group_other: "Todo lo demás",
+  worktype_legend_open: "Mostrar leyenda de colores",
+  stop_when_title: "¿Cuándo dejaste de trabajar?",
+  stop_when_now: "Ahora",
+  stop_when_afterhours: "Al fin de jornada",
+  stop_when_custom: "Hora personalizada",
+  stop_when_confirm: "Detener sesión",
+  stop_when_cancel: "Cancelar",
+  stop_when_invalid: "La hora debe ser posterior al inicio y no futura.",
 
   hire_signal_label: "Señal de Contratación",
   hire_signal_green: "Sin señal",

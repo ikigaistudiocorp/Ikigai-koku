@@ -86,7 +86,7 @@ export async function GET(_req: Request, ctx: Ctx) {
 
   const { rows: recent } = await query(
     `SELECT s.id, s.work_type, s.started_at, s.ended_at, s.duration_minutes,
-            s.note, s.feedback, c.name AS custom_work_type_name
+            s.note, s.feedback, c.name AS custom_work_type_name, c.color AS custom_work_type_color
        FROM sessions s
        LEFT JOIN custom_work_types c ON c.id = s.custom_work_type_id
       WHERE s.project_id = $1 AND s.user_id = $2

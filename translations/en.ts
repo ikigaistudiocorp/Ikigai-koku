@@ -31,6 +31,14 @@ export const en = {
 
   worktype_group_ai: "AI Development Cycle",
   worktype_group_other: "Everything else",
+  worktype_legend_open: "Show work-type color legend",
+  stop_when_title: "When did you stop working?",
+  stop_when_now: "Now",
+  stop_when_afterhours: "At after-hours end",
+  stop_when_custom: "Custom time",
+  stop_when_confirm: "Stop session",
+  stop_when_cancel: "Cancel",
+  stop_when_invalid: "Stop time must be after start and not in the future.",
 
   hire_signal_label: "Hire Signal",
   hire_signal_green: "No signal",

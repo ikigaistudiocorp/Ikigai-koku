@@ -46,7 +46,7 @@ export async function GET(req: Request) {
            s.started_at, s.ended_at, s.duration_minutes, s.note, s.feedback,
            s.is_baseline,
            p.name AS project_name, p.client_name,
-           c.name AS custom_work_type_name,
+           c.name AS custom_work_type_name, c.color AS custom_work_type_color,
            u.name AS user_name
       FROM sessions s
       JOIN projects p ON p.id = s.project_id

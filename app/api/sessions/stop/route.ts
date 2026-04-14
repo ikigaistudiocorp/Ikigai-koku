@@ -7,6 +7,7 @@ type Body = {
   session_id?: string;
   note?: string | null;
   feedback?: string | null;
+  ended_at?: string | null;
 };
 
 export async function POST(req: Request) {
@@ -41,16 +42,28 @@ export async function POST(req: Request) {
   if (!session.is_active) return jsonError("not_active", 409);
 
   const started = new Date(session.started_at).getTime();
-  const durationMinutes = Math.max(0, Math.round((Date.now() - started) / 60_000));
+
+  let endedAtMs = Date.now();
+  if (typeof body.ended_at === "string") {
+    const parsed = new Date(body.ended_at).getTime();
+    if (!Number.isFinite(parsed)) return jsonError("invalid_ended_at", 400);
+    if (parsed <= started) return jsonError("ended_before_start", 400);
+    // Allow 60s of clock skew over the server's now.
+    if (parsed > Date.now() + 60_000) return jsonError("ended_in_future", 400);
+    endedAtMs = parsed;
+  }
+
+  const durationMinutes = Math.max(0, Math.round((endedAtMs - started) / 60_000));
 
   if (durationMinutes < MIN_DURATION_MINUTES) {
     await query(`DELETE FROM sessions WHERE id = $1`, [session.id]);
     return NextResponse.json({ discarded: true, duration_minutes: durationMinutes });
   }
 
+  const endedAt = new Date(endedAtMs).toISOString();
   const { rows: updated } = await query(
     `UPDATE sessions
-        SET ended_at = NOW(),
+        SET ended_at = $5,
             duration_minutes = $2,
             note = $3,
             feedback = $4,
@@ -58,7 +71,7 @@ export async function POST(req: Request) {
             updated_at = NOW()
       WHERE id = $1
       RETURNING id, ended_at, duration_minutes, note, feedback`,
-    [session.id, durationMinutes, note, feedback]
+    [session.id, durationMinutes, note, feedback, endedAt]
   );
 
   return NextResponse.json({ discarded: false, ...updated[0] });

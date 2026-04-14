@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/Card";
 import { useTranslation } from "@/lib/i18n";
 import { WORK_TYPE_META, type WorkType } from "@/types";
+import { WorkTypeDot } from "@/components/ui/WorkTypeDot";
+import { WorkTypeLegend } from "@/components/ui/WorkTypeLegend";
 
 type SessionRow = {
   id: string;
@@ -14,6 +16,7 @@ type SessionRow = {
   project_name: string;
   work_type: string;
   custom_work_type_name: string | null;
+  custom_work_type_color: string | null;
   duration_minutes: number | null;
   started_at: string;
   note: string | null;
@@ -59,7 +62,10 @@ export default function SessionsHistoryPage() {
 
   return (
     <main className="flex-1 px-5 py-6 space-y-4">
-      <h1 className="text-2xl font-heading">{t("reports_sessions")}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-heading">{t("reports_sessions")}</h1>
+        <WorkTypeLegend />
+      </div>
 
       <ul className="space-y-1">
         {data.sessions.map((s) => {
@@ -70,6 +76,10 @@ export default function SessionsHistoryPage() {
             <li key={s.id}>
               <Card padding="sm">
                 <div className="flex items-center gap-3 text-sm">
+                  <WorkTypeDot
+                    workType={s.work_type}
+                    customColor={s.custom_work_type_color}
+                  />
                   <span aria-hidden>{meta?.emoji ?? "•"}</span>
                   <div className="flex-1 min-w-0">
                     <div className="truncate">

@@ -9,6 +9,9 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useClockStore } from "@/store/clockStore";
 import { useTranslation } from "@/lib/i18n";
 import { WORK_TYPE_META, type WorkType } from "@/types";
+import { WorkTypeDot } from "@/components/ui/WorkTypeDot";
+import { StopTimeModal } from "@/components/StopTimeModal";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -53,6 +56,9 @@ export function ClockScreen() {
   const [sheet, setSheet] = useState<"project" | "switch" | null>(null);
   const [note, setNote] = useState("");
   const [pendingStopId, setPendingStopId] = useState<string | null>(null);
+  const [pendingEndedAt, setPendingEndedAt] = useState<string | null>(null);
+  const [stopTimePrompt, setStopTimePrompt] = useState(false);
+  const { data: me } = useCurrentUser();
 
   const selectedProjectId = storedProject;
   const selectedProject =
@@ -126,8 +132,15 @@ export function ClockScreen() {
     }
   };
 
+  const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
   const onStopPressed = () => {
     if (!active) return;
+    const age = Date.now() - new Date(active.started_at).getTime();
+    if (age > THREE_HOURS_MS) {
+      setStopTimePrompt(true);
+      return;
+    }
+    setPendingEndedAt(null);
     setPendingStopId(active.id);
   };
 
@@ -144,6 +157,7 @@ export function ClockScreen() {
           session_id: pendingStopId,
           note: note || null,
           feedback,
+          ended_at: pendingEndedAt,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -152,6 +166,7 @@ export function ClockScreen() {
         duration_minutes?: number;
       };
       setPendingStopId(null);
+      setPendingEndedAt(null);
       setNote("");
       await refreshAll();
       if (data.discarded) {
@@ -274,6 +289,19 @@ export function ClockScreen() {
           <BottomSheet open onClose={() => finishStop(null)}>
             <SessionFeedbackPicker onSelect={finishStop} />
           </BottomSheet>
+        )}
+
+        {stopTimePrompt && active && (
+          <StopTimeModal
+            startedAt={active.started_at}
+            afterHoursEnd={me?.kokuUser?.after_hours_end ?? null}
+            onCancel={() => setStopTimePrompt(false)}
+            onConfirm={(endedAt) => {
+              setPendingEndedAt(endedAt);
+              setStopTimePrompt(false);
+              setPendingStopId(active.id);
+            }}
+          />
         )}
 
       </main>
@@ -420,6 +448,10 @@ function TodayList({ today }: { today: ReturnType<typeof useTodaySummary>["data"
             key={s.id}
             className="flex items-center gap-3 rounded-lg bg-white dark:bg-ikigai-card px-3 py-2 border border-black/[0.05] dark:border-white/[0.06]"
           >
+            <WorkTypeDot
+              workType={s.work_type}
+              customColor={s.custom_work_type_color}
+            />
             <span className="text-lg" aria-hidden>{meta?.emoji ?? "•"}</span>
             <div className="flex-1 min-w-0">
               <div className="text-sm truncate">

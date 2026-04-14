@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/Button";
 import { AILeverageBar, aiLeverageRatio } from "@/components/AILeverageBar";
 import { ProjectModal, type ProjectFormInitial } from "../ProjectModal";
 import { WORK_TYPE_META, type WorkType } from "@/types";
+import { WorkTypeDot } from "@/components/ui/WorkTypeDot";
+import { WorkTypeLegend } from "@/components/ui/WorkTypeLegend";
 
 type Detail = {
   project: {
@@ -36,6 +38,7 @@ type Detail = {
     note: string | null;
     feedback: string | null;
     custom_work_type_name: string | null;
+    custom_work_type_color: string | null;
   }[];
   custom_work_types: {
     id: string;
@@ -192,14 +195,21 @@ export default function ProjectDetailPage({
 
       {data.recent_sessions.length > 0 ? (
         <Card padding="md">
-          <h2 className="text-xs uppercase tracking-wider font-mono text-ikigai-dark/60 dark:text-ikigai-cream/60 mb-2">
-            {t("projects_detail_recent")}
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs uppercase tracking-wider font-mono text-ikigai-dark/60 dark:text-ikigai-cream/60">
+              {t("projects_detail_recent")}
+            </h2>
+            <WorkTypeLegend />
+          </div>
           <ul className="space-y-1 text-sm">
             {data.recent_sessions.map((s) => {
               const meta = WORK_TYPE_META[s.work_type as WorkType];
               return (
                 <li key={s.id} className="flex items-center gap-2 py-1">
+                  <WorkTypeDot
+                    workType={s.work_type}
+                    customColor={s.custom_work_type_color}
+                  />
                   <span aria-hidden>{meta?.emoji ?? "•"}</span>
                   <span className="flex-1 truncate">
                     {s.custom_work_type_name ??
