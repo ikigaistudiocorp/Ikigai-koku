@@ -115,6 +115,35 @@ export const es = {
   settings_admin_work_types: "Tipos de trabajo personalizados",
   settings_admin_users: "Miembros del equipo",
 
+  dash_this_week: "Esta semana",
+  dash_over_target: "sobre el objetivo",
+  dash_within_target: "Dentro del objetivo",
+  dash_sessions_in_projects: "{count} sesiones en {projects} proyectos",
+  dash_ai_leverage_label: "AI Leverage Ratio",
+  dash_ai_high_debug: "Ratio de depuración alto — revisa la calidad de tus specs",
+  dash_ai_good_spec: "Buena calidad de spec esta semana",
+  dash_balance: "Balance de jornada",
+  dash_balance_daily: "Promedio diario (7 días)",
+  dash_balance_long: "Días largos seguidos",
+  dash_balance_weekend: "Sesiones en fin de semana (4s)",
+  dash_balance_after: "Sesiones fuera de horario (4s)",
+  dash_balance_break: "Considera descansar este fin de semana.",
+  dash_trend: "Últimas 12 semanas",
+  dash_baseline_weeks: "Semanas estimadas (línea base)",
+  dash_recent: "Sesiones recientes",
+  dash_empty_prompt:
+    "Registra tu primera sesión para ver tu análisis real.",
+  owner_dash_pipeline_q:
+    "¿Tienes proyectos confirmados sin capacidad disponible?",
+  owner_dash_hire_message_red:
+    "Los datos sugieren que es momento de contratar.",
+  owner_dash_hire_message_amber:
+    "Monitorea de cerca las próximas semanas.",
+  owner_dash_team: "Equipo",
+  owner_dash_capacity: "Capacidad del equipo",
+  owner_dash_utilization: "Utilización",
+  owner_dash_project_breakdown: "Desglose por proyecto",
+
   common_cancel: "Cancelar",
   common_save: "Guardar",
   common_loading: "Cargando...",
