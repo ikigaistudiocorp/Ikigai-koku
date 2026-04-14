@@ -11,6 +11,21 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const projectId = url.searchParams.get("project_id");
+  const all = url.searchParams.get("all") === "true";
+
+  // ?all=true returns active + archived across every scope. Owner-only —
+  // it powers the management screen.
+  if (all) {
+    if (current.kokuUser.role !== "owner") {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    const { rows } = await query(
+      `SELECT id, name, scope, project_id, color, status, created_at
+         FROM custom_work_types
+        ORDER BY scope DESC, status ASC, name ASC`
+    );
+    return NextResponse.json({ custom_work_types: rows });
+  }
 
   const { rows } = await query(
     `SELECT id, name, scope, project_id, color, status, created_at

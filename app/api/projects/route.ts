@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api";
-import { query } from "@/lib/db";
+import { requireAuth, requireOwner, jsonError } from "@/lib/api";
+import { pool, query } from "@/lib/db";
 
 // Minimal GET for the clock picker. Full CRUD lands in Phase 2.3.
 export async function GET() {
@@ -36,4 +36,62 @@ export async function GET() {
     projects: rows,
     recent_project_ids: recent.map((r) => r.project_id),
   });
+}
+
+type PostBody = {
+  name?: string;
+  client_name?: string | null;
+  billable?: boolean;
+  hourly_rate?: number | null;
+  member_ids?: string[];
+  status?: "active" | "paused";
+};
+
+export async function POST(req: Request) {
+  const current = await requireOwner();
+  if (current instanceof Response) return current;
+
+  const body = (await req.json().catch(() => ({}))) as PostBody;
+  const name = body.name?.trim();
+  if (!name) return jsonError("missing_name", 400);
+  if (name.length > 80) return jsonError("name_too_long", 400);
+  if (body.billable && body.hourly_rate != null && body.hourly_rate < 0) {
+    return jsonError("invalid_rate", 400);
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query<{ id: string }>(
+      `INSERT INTO projects (name, client_name, status, billable, hourly_rate, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [
+        name,
+        body.client_name ?? null,
+        body.status ?? "active",
+        body.billable ?? true,
+        body.hourly_rate ?? null,
+        current.user.id,
+      ]
+    );
+    const projectId = rows[0].id;
+
+    const members = (body.member_ids ?? []).filter((id) => typeof id === "string");
+    if (members.length > 0) {
+      await client.query(
+        `INSERT INTO project_members (project_id, user_id)
+         SELECT $1, u FROM UNNEST($2::text[]) AS u
+         ON CONFLICT DO NOTHING`,
+        [projectId, members]
+      );
+    }
+    await client.query("COMMIT");
+    return NextResponse.json({ id: projectId }, { status: 201 });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }
