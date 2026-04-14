@@ -55,14 +55,14 @@ export const WORK_TYPE_META: Record<WorkType, WorkTypeMetaEntry> = {
   debug: {
     label_es: "Depuración",
     label_en: "Debugging",
-    color: "bg-rose-500",
+    color: "bg-red-500",
     group: "ai_cycle",
     emoji: "🔍",
   },
   polish: {
     label_es: "Refinado UI",
     label_en: "UI Polishing",
-    color: "bg-pink-400",
+    color: "bg-indigo-400",
     group: "ai_cycle",
     emoji: "✨",
   },
