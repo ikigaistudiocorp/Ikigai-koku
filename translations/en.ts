@@ -141,6 +141,23 @@ export const en = {
   owner_dash_utilization: "Utilization",
   owner_dash_project_breakdown: "Project breakdown",
 
+  mirror_preview_cta: "Preview",
+  mirror_preview_note:
+    "This is a preview — the real mirror uses last week's data.",
+
+  reports_title: "Reports",
+  reports_sessions: "Session history",
+  reports_kinko: "Export to Kinko",
+  reports_ai_leverage: "AI Leverage Report",
+  reports_filter_from: "From",
+  reports_filter_to: "To",
+  reports_filter_project: "Project",
+  reports_filter_work_type: "Work type",
+  reports_export_json: "Export JSON",
+  reports_export_csv: "Export CSV",
+  reports_summary_hours: "Total hours",
+  reports_summary_value: "Billable value",
+
   common_cancel: "Cancel",
   common_save: "Save",
   common_loading: "Loading...",
