@@ -11,6 +11,7 @@ import { useTranslation } from "@/lib/i18n";
 import { WORK_TYPE_META, type WorkType } from "@/types";
 import { WorkTypeDot } from "@/components/ui/WorkTypeDot";
 import { SessionEditModal, type EditHistoryEntry } from "@/components/SessionEditModal";
+import { ManualSessionModal } from "@/components/ManualSessionModal";
 import { StopTimeModal } from "@/components/StopTimeModal";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Button } from "@/components/ui/Button";
@@ -59,6 +60,7 @@ export function ClockScreen() {
   const startedFromPlanId = useClockStore((s) => s.startedFromPlanId);
   const setStartedFromPlanId = useClockStore((s) => s.setStartedFromPlanId);
   const [planRemovePrompt, setPlanRemovePrompt] = useState<string | null>(null);
+  const [addingPast, setAddingPast] = useState(false);
 
   const [pickerValue, setPickerValue] = useState<PickerValue | null>(null);
   const [busy, setBusy] = useState(false);
@@ -482,6 +484,14 @@ export function ClockScreen() {
         {t("clock_button_start")}
       </Button>
 
+      <button
+        type="button"
+        onClick={() => setAddingPast(true)}
+        className="self-center text-xs font-mono text-ikigai-purple underline underline-offset-4"
+      >
+        + {t("manual_session_add")}
+      </button>
+
       <TodayList today={today} />
 
       <BottomSheet
@@ -499,6 +509,16 @@ export function ClockScreen() {
           }}
         />
       </BottomSheet>
+
+      {addingPast && (
+        <ManualSessionModal
+          onClose={() => setAddingPast(false)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["sessions", "today"] });
+            qc.invalidateQueries({ queryKey: ["sessions-history"] });
+          }}
+        />
+      )}
 
       {planRemovePrompt && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40 px-4 py-6">

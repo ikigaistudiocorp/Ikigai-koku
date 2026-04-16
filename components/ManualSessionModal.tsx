@@ -99,8 +99,9 @@ export function ManualSessionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40 px-4 py-6 overflow-y-auto">
-      <Card padding="lg" className="w-full max-w-md space-y-4 max-h-[calc(100dvh-3rem)] overflow-y-auto">
+    <div className="fixed inset-0 z-40 bg-black/40 overflow-y-auto">
+      <div className="min-h-full flex items-end sm:items-center justify-center px-4 py-6">
+        <Card padding="lg" className="w-full max-w-md space-y-4">
         <h2 className="text-lg font-heading">{t("manual_session_title")}</h2>
 
         <ProjectPicker
@@ -176,6 +177,7 @@ export function ManualSessionModal({
           </Button>
         </div>
       </Card>
+      </div>
     </div>
   );
 }
