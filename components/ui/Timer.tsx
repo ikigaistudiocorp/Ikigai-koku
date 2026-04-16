@@ -14,23 +14,39 @@ function format(totalMs: number): string {
 
 export function Timer({
   startedAt,
+  pausedAt,
+  pausedIntervals,
   className,
 }: {
   startedAt: string | Date;
+  pausedAt?: string | null;
+  pausedIntervals?: Array<{ start: string; end: string }>;
   className?: string;
 }) {
   const start =
     typeof startedAt === "string" ? new Date(startedAt) : startedAt;
   const [now, setNow] = useState(() => Date.now());
+  const frozen = !!pausedAt;
 
   useEffect(() => {
+    if (frozen) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [frozen]);
+
+  const closedPausedMs = (pausedIntervals ?? []).reduce((acc, iv) => {
+    const s = new Date(iv.start).getTime();
+    const e = new Date(iv.end).getTime();
+    return Number.isFinite(s) && Number.isFinite(e) && e > s ? acc + (e - s) : acc;
+  }, 0);
+  const referenceMs = frozen
+    ? new Date(pausedAt!).getTime()
+    : now;
+  const elapsed = Math.max(0, referenceMs - start.getTime() - closedPausedMs);
 
   return (
     <span className={cn("font-mono tabular-nums", className)}>
-      {format(now - start.getTime())}
+      {format(elapsed)}
     </span>
   );
 }

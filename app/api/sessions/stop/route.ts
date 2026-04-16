@@ -31,9 +31,11 @@ export async function POST(req: Request) {
     started_at: string;
     user_id: string;
     is_active: boolean;
+    paused_at: string | null;
+    paused_intervals: Array<{ start: string; end: string }> | null;
   }>(
-    `SELECT id, started_at, user_id, is_active FROM sessions
-      WHERE id = $1 LIMIT 1`,
+    `SELECT id, started_at, user_id, is_active, paused_at, paused_intervals
+       FROM sessions WHERE id = $1 LIMIT 1`,
     [session_id]
   );
   const session = rows[0];
@@ -48,12 +50,29 @@ export async function POST(req: Request) {
     const parsed = new Date(body.ended_at).getTime();
     if (!Number.isFinite(parsed)) return jsonError("invalid_ended_at", 400);
     if (parsed <= started) return jsonError("ended_before_start", 400);
-    // Allow 60s of clock skew over the server's now.
     if (parsed > Date.now() + 60_000) return jsonError("ended_in_future", 400);
     endedAtMs = parsed;
   }
 
-  const durationMinutes = Math.max(0, Math.round((endedAtMs - started) / 60_000));
+  // Close an open pause at the stop time so its ms count against paused time,
+  // not worked time.
+  const intervals = session.paused_intervals ?? [];
+  if (session.paused_at) {
+    const pauseStart = new Date(session.paused_at).getTime();
+    intervals.push({
+      start: new Date(pauseStart).toISOString(),
+      end: new Date(Math.max(pauseStart, endedAtMs)).toISOString(),
+    });
+  }
+  let pausedMs = 0;
+  for (const iv of intervals) {
+    const s = new Date(iv.start).getTime();
+    const e = new Date(iv.end).getTime();
+    if (Number.isFinite(s) && Number.isFinite(e) && e > s) pausedMs += e - s;
+  }
+
+  const workedMs = Math.max(0, endedAtMs - started - pausedMs);
+  const durationMinutes = Math.round(workedMs / 60_000);
 
   if (durationMinutes < MIN_DURATION_MINUTES) {
     await query(`DELETE FROM sessions WHERE id = $1`, [session.id]);
@@ -68,10 +87,19 @@ export async function POST(req: Request) {
             note = $3,
             feedback = $4,
             is_active = false,
+            paused_at = NULL,
+            paused_intervals = $6::jsonb,
             updated_at = NOW()
       WHERE id = $1
       RETURNING id, ended_at, duration_minutes, note, feedback`,
-    [session.id, durationMinutes, note, feedback, endedAt]
+    [
+      session.id,
+      durationMinutes,
+      note,
+      feedback,
+      endedAt,
+      JSON.stringify(intervals),
+    ]
   );
 
   return NextResponse.json({ discarded: false, ...updated[0] });

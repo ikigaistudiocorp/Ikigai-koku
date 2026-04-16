@@ -23,6 +23,7 @@ import { WorkTypePicker } from "@/components/ui/WorkTypePicker";
 import { SessionFeedbackPicker } from "@/components/ui/SessionFeedbackPicker";
 import { MAX_NOTE_LENGTH } from "@/lib/sessions";
 import { toast as pushToast } from "@/store/toastStore";
+import { cn } from "@/lib/cn";
 
 type PickerValue =
   | { kind: "builtin"; workType: WorkType }
@@ -55,8 +56,6 @@ export function ClockScreen() {
   const storedProject = useClockStore((s) => s.selectedProjectId);
   const setStoredProject = useClockStore((s) => s.setSelectedProjectId);
   const setPendingStop = useClockStore((s) => s.setPendingStop);
-  const pausedContext = useClockStore((s) => s.pausedContext);
-  const setPausedContext = useClockStore((s) => s.setPausedContext);
 
   const [pickerValue, setPickerValue] = useState<PickerValue | null>(null);
   const [busy, setBusy] = useState(false);
@@ -146,28 +145,17 @@ export function ClockScreen() {
   };
 
   const onPause = async () => {
-    if (!active) return;
+    if (!active || active.paused_at) return;
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/sessions/stop", {
+      const res = await fetch("/api/sessions/pause", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          session_id: active.id,
-          note: note || null,
-          feedback: null,
-        }),
+        body: JSON.stringify({ session_id: active.id }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setPausedContext({
-        project_id: active.project_id,
-        work_type: active.work_type,
-        custom_work_type_id: active.custom_work_type_id ?? null,
-        paused_at: Date.now(),
-      });
-      setNote("");
       await refreshAll();
     } catch (e) {
       setError(e instanceof Error ? e.message : "pause_failed");
@@ -177,19 +165,23 @@ export function ClockScreen() {
   };
 
   const onResume = async () => {
-    if (!pausedContext) return;
-    const body = pausedContext.custom_work_type_id
-      ? {
-          project_id: pausedContext.project_id,
-          work_type: "other" as const,
-          custom_work_type_id: pausedContext.custom_work_type_id,
-        }
-      : {
-          project_id: pausedContext.project_id,
-          work_type: pausedContext.work_type,
-        };
-    await startSession(body);
-    setPausedContext(null);
+    if (!active || !active.paused_at) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/sessions/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ session_id: active.id }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await refreshAll();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "resume_failed");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
@@ -279,8 +271,18 @@ export function ClockScreen() {
           </div>
           <Timer
             startedAt={active.started_at}
-            className="text-6xl text-ikigai-purple block"
+            pausedAt={active.paused_at ?? null}
+            pausedIntervals={active.paused_intervals}
+            className={cn(
+              "text-6xl block",
+              active.paused_at ? "text-ikigai-amber" : "text-ikigai-purple"
+            )}
           />
+          {active.paused_at && (
+            <p className="text-xs uppercase font-mono tracking-wider text-ikigai-amber">
+              {t("paused_title")}
+            </p>
+          )}
           <Badge
             workType={active.work_type as WorkType}
             label={labelFor(active.work_type, language)}
@@ -317,16 +319,29 @@ export function ClockScreen() {
         )}
 
         <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            size="lg"
-            fullWidth
-            loading={busy}
-            disabled={!isOnline}
-            onClick={onPause}
-          >
-            {t("clock_button_pause")}
-          </Button>
+          {active.paused_at ? (
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={busy}
+              disabled={!isOnline}
+              onClick={onResume}
+            >
+              {t("paused_resume")}
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="lg"
+              fullWidth
+              loading={busy}
+              disabled={!isOnline}
+              onClick={onPause}
+            >
+              {t("clock_button_pause")}
+            </Button>
+          )}
           <Button
             variant="danger"
             size="lg"
@@ -382,24 +397,6 @@ export function ClockScreen() {
 
   // ── STATE A: not clocked in ──
   const todayTotal = today ? formatHM(today.total_minutes_today) : { h: 0, m: 0 };
-  const pausedProject =
-    pausedContext
-      ? projectsData?.projects.find((p) => p.id === pausedContext.project_id) ?? null
-      : null;
-  const pausedCustom =
-    pausedContext?.custom_work_type_id && customData
-      ? customData.custom_work_types.find(
-          (c) => c.id === pausedContext.custom_work_type_id
-        ) ?? null
-      : null;
-  const pausedMeta = pausedContext
-    ? WORK_TYPE_META[pausedContext.work_type as WorkType]
-    : null;
-  const pausedLabel =
-    pausedCustom?.name ??
-    (language === "en" ? pausedMeta?.label_en : pausedMeta?.label_es) ??
-    pausedContext?.work_type ??
-    "";
   const canStart = !!selectedProjectId && !!pickerValue && isOnline;
 
   return (
@@ -421,41 +418,6 @@ export function ClockScreen() {
         </p>
       </header>
 
-      {pausedContext && mounted && (
-        <Card padding="lg" className="space-y-3 border-ikigai-amber/60 bg-ikigai-amber/10">
-          <div className="text-xs uppercase tracking-wider font-mono text-ikigai-amber">
-            {t("paused_title")}
-          </div>
-          <div className="font-medium text-lg">
-            {pausedLabel} · {pausedProject?.name ?? ""}
-          </div>
-          <p className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
-            {t("paused_subtitle")}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              fullWidth
-              onClick={() => setPausedContext(null)}
-              disabled={busy}
-            >
-              {t("paused_end")}
-            </Button>
-            <Button
-              variant="primary"
-              fullWidth
-              onClick={onResume}
-              loading={busy}
-              disabled={!isOnline}
-            >
-              {t("paused_resume")}
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {!pausedContext && (
-      <>
       <Card padding="md" className="space-y-3">
         <div className="text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
           {t("clock_select_project")}
@@ -513,8 +475,6 @@ export function ClockScreen() {
       >
         {t("clock_button_start")}
       </Button>
-      </>
-      )}
 
       <TodayList today={today} />
 

@@ -157,6 +157,8 @@ export type Session = {
   note: string | null;
   feedback: SessionFeedback | null;
   is_active: boolean;
+  paused_at?: string | null;
+  paused_intervals?: Array<{ start: string; end: string }>;
   is_baseline: boolean;
   invoiced: boolean;
   invoice_id: string | null;

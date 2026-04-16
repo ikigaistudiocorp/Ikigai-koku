@@ -252,3 +252,12 @@ CREATE TABLE IF NOT EXISTS planned_sessions (
 );
 CREATE INDEX IF NOT EXISTS planned_sessions_user_idx
   ON planned_sessions (user_id, created_at DESC);
+
+-- 2026-04-16: real pause — session stays active while paused.
+-- paused_at: non-null while currently in a pause; NOW() - paused_at is the
+--   live pause length (used by clients to freeze the timer).
+-- paused_intervals: closed pause intervals [{start, end}], used to subtract
+--   paused time from the total duration on stop.
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS paused_at timestamptz;
+ALTER TABLE sessions
+  ADD COLUMN IF NOT EXISTS paused_intervals jsonb NOT NULL DEFAULT '[]'::jsonb;

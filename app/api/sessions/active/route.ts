@@ -15,11 +15,14 @@ export async function GET() {
     started_at: string;
     note: string | null;
     is_baseline: boolean;
+    paused_at: string | null;
+    paused_intervals: Array<{ start: string; end: string }> | null;
     project_name: string;
     project_client: string | null;
   }>(
     `SELECT s.id, s.user_id, s.project_id, s.work_type, s.custom_work_type_id,
             s.started_at, s.note, s.is_baseline,
+            s.paused_at, s.paused_intervals,
             p.name AS project_name, p.client_name AS project_client
        FROM sessions s
        JOIN projects p ON p.id = s.project_id
@@ -40,6 +43,8 @@ export async function GET() {
     note: row.note,
     is_baseline: row.is_baseline,
     is_active: true,
+    paused_at: row.paused_at,
+    paused_intervals: row.paused_intervals ?? [],
     project: {
       id: row.project_id,
       name: row.project_name,

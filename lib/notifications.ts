@@ -43,6 +43,7 @@ export async function checkForgottenClockOuts(now = new Date()) {
        JOIN projects p ON p.id = s.project_id
        JOIN koku_users k ON k.id = s.user_id
       WHERE s.is_active = true
+        AND s.paused_at IS NULL
         AND s.started_at < NOW() - INTERVAL '3 hours'`
   );
 
