@@ -284,7 +284,7 @@ function PlannedRowItem({
         }
         aria-label={t("priority_label")}
         className={
-          "text-[10px] font-bold uppercase rounded-full px-2 py-0.5 text-white border-0 appearance-none " +
+          "text-[10px] font-bold uppercase rounded-full px-2 py-0.5 text-white text-center border-0 appearance-none " +
           PRIORITY_STYLE[row.priority]
         }
       >
