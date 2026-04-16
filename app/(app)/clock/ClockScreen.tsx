@@ -362,6 +362,14 @@ export function ClockScreen() {
           </Button>
         </div>
 
+        <button
+          type="button"
+          onClick={() => setAddingPast(true)}
+          className="self-center text-xs font-mono text-ikigai-purple underline underline-offset-4"
+        >
+          + {t("manual_session_add")}
+        </button>
+
         <TodayList today={today} />
 
         <BottomSheet
@@ -395,6 +403,16 @@ export function ClockScreen() {
               setPendingEndedAt(endedAt);
               setStopTimePrompt(false);
               setPendingStopId(active.id);
+            }}
+          />
+        )}
+
+        {addingPast && (
+          <ManualSessionModal
+            onClose={() => setAddingPast(false)}
+            onSaved={() => {
+              qc.invalidateQueries({ queryKey: ["sessions", "today"] });
+              qc.invalidateQueries({ queryKey: ["sessions-history"] });
             }}
           />
         )}
