@@ -6,6 +6,7 @@ import { useTranslation } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
 import { StatusDot, type Status } from "@/components/ui/StatusDot";
 import { AILeverageBar } from "@/components/AILeverageBar";
+import { WorkTypeLegend } from "@/components/ui/WorkTypeLegend";
 import { cn } from "@/lib/cn";
 
 type TeamAnalytics = {
@@ -164,9 +165,12 @@ export function OwnerDashboard() {
       </Card>
 
       <Card padding="md" className="space-y-3">
-        <h2 className="font-mono text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
-          {t("owner_dash_team")}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-mono text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
+            {t("owner_dash_team")}
+          </h2>
+          <WorkTypeLegend />
+        </div>
         <ul className="space-y-3">
           {data.members.map((m) => (
             <li key={m.user_id} className="space-y-1">
@@ -206,10 +210,13 @@ export function OwnerDashboard() {
         </ul>
       </Card>
 
-      <Card padding="md" className="space-y-3">
+      <Card padding="md" className="space-y-2">
         <h2 className="font-mono text-xs uppercase tracking-wider text-ikigai-dark/60 dark:text-ikigai-cream/60">
           {t("owner_dash_capacity")}
         </h2>
+        <p className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60">
+          {t("owner_dash_capacity_help")}
+        </p>
         <CapacityTrend trend={data.capacity_trend} />
       </Card>
     </main>

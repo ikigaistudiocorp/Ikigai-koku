@@ -197,6 +197,7 @@ export const es = {
     "Monitorea de cerca las próximas semanas.",
   owner_dash_team: "Equipo",
   owner_dash_capacity: "Capacidad del equipo",
+  owner_dash_capacity_help: "Horas registradas por persona, una barra por semana en las últimas 8 semanas. Las rayas marcan datos importados antes de Koku.",
   owner_dash_utilization: "Utilización",
   owner_dash_project_breakdown: "Desglose por proyecto",
 

@@ -194,6 +194,7 @@ export const en = {
   owner_dash_hire_message_amber: "Monitor closely over the coming weeks.",
   owner_dash_team: "Team",
   owner_dash_capacity: "Team capacity",
+  owner_dash_capacity_help: "Hours logged per member, one bar per week over the last 8 weeks. Striped bars are baseline imports from before Koku.",
   owner_dash_utilization: "Utilization",
   owner_dash_project_breakdown: "Project breakdown",
 
