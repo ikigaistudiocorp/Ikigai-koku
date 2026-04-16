@@ -69,6 +69,10 @@ export const es = {
   plan_remove_subtitle: "Terminaste una sesión desde este pendiente. Mantenlo para otra ronda, o quítalo.",
   plan_remove_keep: "Mantener",
   plan_remove_confirm: "Quitar",
+  manual_session_title: "Registrar sesión pasada",
+  manual_session_add: "Agregar sesión",
+  manual_session_save: "Guardar sesión",
+  manual_session_invalid: "Elige proyecto, tipo de trabajo y un rango de tiempo válido.",
 
   hire_signal_label: "Señal de Contratación",
   hire_signal_green: "Sin señal",

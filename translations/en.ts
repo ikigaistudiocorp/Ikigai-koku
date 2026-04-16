@@ -69,6 +69,10 @@ export const en = {
   plan_remove_subtitle: "You finished a session from this planned item. Keep it on the list for another round, or remove it.",
   plan_remove_keep: "Keep",
   plan_remove_confirm: "Remove",
+  manual_session_title: "Add past session",
+  manual_session_add: "Add past session",
+  manual_session_save: "Add session",
+  manual_session_invalid: "Pick a project, work type, and a valid time range.",
 
   hire_signal_label: "Hire Signal",
   hire_signal_green: "No signal",

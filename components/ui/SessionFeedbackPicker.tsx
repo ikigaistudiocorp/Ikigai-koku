@@ -11,8 +11,10 @@ const OPTIONS: Array<{ key: SessionFeedback; emoji: string; translation: string 
 
 export function SessionFeedbackPicker({
   onSelect,
+  selected,
 }: {
   onSelect: (feedback: SessionFeedback | null) => void;
+  selected?: SessionFeedback | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -26,7 +28,12 @@ export function SessionFeedbackPicker({
             key={o.key}
             type="button"
             onClick={() => onSelect(o.key)}
-            className="flex items-center gap-3 w-full min-h-[64px] rounded-xl px-5 py-3 text-left border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900 hover:border-ikigai-purple transition-colors"
+            className={
+              "flex items-center gap-3 w-full min-h-[64px] rounded-xl px-5 py-3 text-left border bg-white dark:bg-neutral-900 transition-colors " +
+              (selected === o.key
+                ? "border-ikigai-purple bg-ikigai-purple/10"
+                : "border-black/10 dark:border-white/15 hover:border-ikigai-purple")
+            }
           >
             <span className="text-2xl" aria-hidden>
               {o.emoji}

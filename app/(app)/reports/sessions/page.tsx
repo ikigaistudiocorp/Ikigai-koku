@@ -11,6 +11,8 @@ import {
   SessionEditModal,
   type EditHistoryEntry,
 } from "@/components/SessionEditModal";
+import { ManualSessionModal } from "@/components/ManualSessionModal";
+import { Button } from "@/components/ui/Button";
 
 type SessionRow = {
   id: string;
@@ -56,6 +58,7 @@ export default function SessionsHistoryPage() {
   const { t, language } = useTranslation();
   const [offset, setOffset] = useState(0);
   const [editing, setEditing] = useState<SessionRow | null>(null);
+  const [adding, setAdding] = useState(false);
   const qc = useQueryClient();
 
   const { data } = useQuery<ListResponse>({
@@ -86,7 +89,12 @@ export default function SessionsHistoryPage() {
     <main className="flex-1 px-5 py-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-heading">{t("reports_sessions")}</h1>
-        <WorkTypeLegend />
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>
+            + {t("manual_session_add")}
+          </Button>
+          <WorkTypeLegend />
+        </div>
       </div>
 
       <ul className="space-y-1">
@@ -162,6 +170,16 @@ export default function SessionsHistoryPage() {
           );
         })}
       </ul>
+
+      {adding && (
+        <ManualSessionModal
+          onClose={() => setAdding(false)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["sessions-history"] });
+            qc.invalidateQueries({ queryKey: ["sessions", "today"] });
+          }}
+        />
+      )}
 
       {editing && (
         <SessionEditModal
