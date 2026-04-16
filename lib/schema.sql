@@ -261,3 +261,8 @@ CREATE INDEX IF NOT EXISTS planned_sessions_user_idx
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS paused_at timestamptz;
 ALTER TABLE sessions
   ADD COLUMN IF NOT EXISTS paused_intervals jsonb NOT NULL DEFAULT '[]'::jsonb;
+
+-- 2026-04-16: priority on planned sessions (1=urgent, 2=high, 3=normal, 4=low).
+ALTER TABLE planned_sessions
+  ADD COLUMN IF NOT EXISTS priority smallint NOT NULL DEFAULT 3
+    CHECK (priority BETWEEN 1 AND 4);

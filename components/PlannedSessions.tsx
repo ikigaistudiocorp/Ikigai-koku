@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
@@ -23,6 +23,17 @@ type PlannedRow = {
   note: string | null;
   created_at: string;
   accumulated_minutes: number;
+  priority: 1 | 2 | 3 | 4;
+};
+
+type SortKey = "priority" | "newest" | "accumulated";
+const SORT_LS_KEY = "koku-todo-sort";
+
+const PRIORITY_STYLE: Record<1 | 2 | 3 | 4, string> = {
+  1: "bg-red-500",
+  2: "bg-orange-500",
+  3: "bg-neutral-400",
+  4: "bg-neutral-300 dark:bg-neutral-600",
 };
 
 type PickerValue =
@@ -39,6 +50,17 @@ export function PlannedSessions({
   const { t, language } = useTranslation();
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("priority");
+  useEffect(() => {
+    const stored = localStorage.getItem(SORT_LS_KEY);
+    if (stored === "priority" || stored === "newest" || stored === "accumulated") {
+      setSortKey(stored);
+    }
+  }, []);
+  const setSort = (v: SortKey) => {
+    setSortKey(v);
+    localStorage.setItem(SORT_LS_KEY, v);
+  };
 
   const { data } = useQuery<{ planned: PlannedRow[] }>({
     queryKey: ["planned-sessions"],
@@ -58,21 +80,57 @@ export function PlannedSessions({
     qc.invalidateQueries({ queryKey: ["planned-sessions"] });
   };
 
-  const rows = data?.planned ?? [];
+  const rows = useMemo(() => {
+    const r = [...(data?.planned ?? [])];
+    if (sortKey === "newest") {
+      r.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    } else if (sortKey === "accumulated") {
+      r.sort((a, b) => b.accumulated_minutes - a.accumulated_minutes);
+    } else {
+      r.sort(
+        (a, b) =>
+          a.priority - b.priority ||
+          b.created_at.localeCompare(a.created_at)
+      );
+    }
+    return r;
+  }, [data, sortKey]);
+
+  const setPriority = async (id: string, priority: 1 | 2 | 3 | 4) => {
+    await fetch(`/api/planned-sessions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ priority }),
+    });
+    qc.invalidateQueries({ queryKey: ["planned-sessions"] });
+  };
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="text-xs uppercase tracking-wider font-mono text-ikigai-dark/60 dark:text-ikigai-cream/60">
           {t("planned_title")}
         </h2>
-        <button
-          type="button"
-          onClick={() => setAdding(true)}
-          className="text-xs font-mono text-ikigai-purple"
-        >
-          + {t("planned_add")}
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={sortKey}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            aria-label={t("sort_label")}
+            className="text-xs rounded-full px-2 py-1 border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
+          >
+            <option value="priority">{t("sort_priority")}</option>
+            <option value="newest">{t("sort_newest")}</option>
+            <option value="accumulated">{t("sort_accumulated")}</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="text-xs font-mono text-ikigai-purple"
+          >
+            + {t("planned_add")}
+          </button>
+        </div>
       </div>
 
       {rows.length === 0 ? (
@@ -91,6 +149,22 @@ export function PlannedSessions({
                 key={p.id}
                 className="flex items-center gap-2 rounded-lg bg-white dark:bg-ikigai-card px-3 py-2 border border-black/[0.05] dark:border-white/[0.06]"
               >
+                <select
+                  value={p.priority}
+                  onChange={(e) =>
+                    setPriority(p.id, Number(e.target.value) as 1 | 2 | 3 | 4)
+                  }
+                  aria-label={t("priority_label")}
+                  className={
+                    "text-[10px] font-bold uppercase rounded-full px-2 py-0.5 text-white border-0 appearance-none " +
+                    PRIORITY_STYLE[p.priority]
+                  }
+                >
+                  <option value={1}>{t("priority_urgent")}</option>
+                  <option value={2}>{t("priority_high")}</option>
+                  <option value={3}>{t("priority_normal")}</option>
+                  <option value={4}>{t("priority_low")}</option>
+                </select>
                 <WorkTypeDot
                   workType={p.work_type}
                   customColor={p.custom_work_type_color}
@@ -147,6 +221,7 @@ function AddPlannedSheet({ onClose }: { onClose: () => void }) {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [picker, setPicker] = useState<PickerValue | null>(null);
   const [note, setNote] = useState("");
+  const [priority, setPriority] = useState<1 | 2 | 3 | 4>(3);
   const [busy, setBusy] = useState(false);
   const { data: customData } = useCustomWorkTypes(projectId);
 
@@ -154,14 +229,15 @@ function AddPlannedSheet({ onClose }: { onClose: () => void }) {
     if (!projectId || !picker) return;
     setBusy(true);
     try {
+      const base = { note: note || null, priority };
       const body =
         picker.kind === "builtin"
-          ? { project_id: projectId, work_type: picker.workType, note: note || null }
+          ? { project_id: projectId, work_type: picker.workType, ...base }
           : {
               project_id: projectId,
               work_type: "other" as const,
               custom_work_type_id: picker.customId,
-              note: note || null,
+              ...base,
             };
       const res = await fetch("/api/planned-sessions", {
         method: "POST",
@@ -200,6 +276,21 @@ function AddPlannedSheet({ onClose }: { onClose: () => void }) {
         placeholder={t("clock_note_placeholder")}
         className="w-full h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
       />
+      <label className="flex items-center gap-2 text-sm">
+        <span className="text-xs uppercase tracking-wider font-mono text-ikigai-dark/60 dark:text-ikigai-cream/60">
+          {t("priority_label")}
+        </span>
+        <select
+          value={priority}
+          onChange={(e) => setPriority(Number(e.target.value) as 1 | 2 | 3 | 4)}
+          className="flex-1 h-11 px-3 rounded-lg border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
+        >
+          <option value={1}>{t("priority_urgent")}</option>
+          <option value={2}>{t("priority_high")}</option>
+          <option value={3}>{t("priority_normal")}</option>
+          <option value={4}>{t("priority_low")}</option>
+        </select>
+      </label>
       <div className="flex gap-2">
         <Button variant="ghost" fullWidth onClick={onClose} disabled={busy}>
           {t("planned_delete")}

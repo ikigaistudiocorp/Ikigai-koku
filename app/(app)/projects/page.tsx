@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTranslation } from "@/lib/i18n";
@@ -11,8 +11,13 @@ import { ProjectModal } from "./ProjectModal";
 import type { Project } from "@/types";
 
 type ProjectListItem = Project & {
-  my_minutes_all: number;
+  my_minutes_all?: number;
+  accumulated_minutes: number;
+  last_activity_at: string | null;
 };
+
+type ProjectsSort = "name" | "accumulated" | "recent";
+const PROJECTS_SORT_LS_KEY = "koku-projects-sort";
 
 function useProjectsList() {
   return useQuery<{ projects: Project[] }>({
@@ -47,7 +52,30 @@ export default function ProjectsPage() {
   const [showNew, setShowNew] = useState(false);
 
   const isOwner = me?.kokuUser?.role === "owner";
-  const projects = (data?.projects ?? []) as ProjectListItem[];
+  const rawProjects = (data?.projects ?? []) as ProjectListItem[];
+
+  const [sortKey, setSortKey] = useState<ProjectsSort>("name");
+  useEffect(() => {
+    const stored = localStorage.getItem(PROJECTS_SORT_LS_KEY);
+    if (stored === "name" || stored === "accumulated" || stored === "recent") {
+      setSortKey(stored);
+    }
+  }, []);
+  const setSort = (v: ProjectsSort) => {
+    setSortKey(v);
+    localStorage.setItem(PROJECTS_SORT_LS_KEY, v);
+  };
+  const projects = useMemo(() => {
+    const r = [...rawProjects];
+    if (sortKey === "accumulated") {
+      r.sort((a, b) => b.accumulated_minutes - a.accumulated_minutes);
+    } else if (sortKey === "recent") {
+      r.sort((a, b) => (b.last_activity_at ?? "").localeCompare(a.last_activity_at ?? ""));
+    } else {
+      r.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return r;
+  }, [rawProjects, sortKey]);
 
   const createProject = async (payload: Partial<Project> & { member_ids?: string[] }) => {
     const res = await fetch("/api/projects", {
@@ -62,13 +90,25 @@ export default function ProjectsPage() {
 
   return (
     <main className="flex-1 px-5 py-6 space-y-5">
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-heading">{t("nav_projects")}</h1>
-        {isOwner && (
-          <Button size="sm" onClick={() => setShowNew(true)}>
-            + {t("projects_new")}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <select
+            value={sortKey}
+            onChange={(e) => setSort(e.target.value as ProjectsSort)}
+            aria-label={t("sort_label")}
+            className="text-xs rounded-full px-2 py-1 border border-black/10 dark:border-white/15 bg-white dark:bg-neutral-900"
+          >
+            <option value="name">{t("sort_name")}</option>
+            <option value="accumulated">{t("sort_accumulated")}</option>
+            <option value="recent">{t("sort_recent")}</option>
+          </select>
+          {isOwner && (
+            <Button size="sm" onClick={() => setShowNew(true)}>
+              + {t("projects_new")}
+            </Button>
+          )}
+        </div>
       </header>
 
       {projects.length === 0 ? (
@@ -92,6 +132,10 @@ export default function ProjectsPage() {
                           {p.client_name}
                         </p>
                       )}
+                      <p className="text-xs font-mono text-ikigai-dark/50 dark:text-ikigai-cream/50 mt-1">
+                        {Math.floor(p.accumulated_minutes / 60)}h{" "}
+                        {p.accumulated_minutes % 60}m
+                      </p>
                     </div>
                     <StatusBadge status={p.status} />
                   </div>

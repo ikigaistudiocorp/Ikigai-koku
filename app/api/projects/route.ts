@@ -11,7 +11,20 @@ export async function GET() {
   const { rows } = await query(
     `SELECT p.id, p.name, p.client_name, p.status, p.billable,
             p.hourly_rate::text AS hourly_rate,
-            p.created_by, p.created_at
+            p.created_by, p.created_at,
+            COALESCE((
+              SELECT SUM(s.duration_minutes)::int
+                FROM sessions s
+               WHERE s.project_id = p.id
+                 AND s.is_baseline = false
+                 AND s.is_active = false
+                 AND ($2 = true OR s.user_id = $1)
+            ), 0) AS accumulated_minutes,
+            (SELECT MAX(s.started_at)
+               FROM sessions s
+              WHERE s.project_id = p.id
+                AND ($2 = true OR s.user_id = $1)
+            ) AS last_activity_at
        FROM projects p
       WHERE p.status != 'archived'
         AND ($2 = true

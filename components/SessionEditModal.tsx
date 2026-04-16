@@ -121,7 +121,7 @@ export function SessionEditModal({
 
   return (
     <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40 px-4 py-6 overflow-y-auto">
-      <Card padding="lg" className="w-full max-w-md space-y-4">
+      <Card padding="lg" className="w-full max-w-md space-y-4 max-h-[calc(100dvh-3rem)] overflow-y-auto">
         <h2 className="text-lg font-heading">{t("session_edit_title")}</h2>
 
         <label className="block text-sm space-y-1">
