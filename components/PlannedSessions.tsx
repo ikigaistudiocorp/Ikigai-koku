@@ -22,6 +22,7 @@ type PlannedRow = {
   custom_work_type_color: string | null;
   note: string | null;
   created_at: string;
+  accumulated_minutes: number;
 };
 
 type PickerValue =
@@ -97,6 +98,10 @@ export function PlannedSessions({
                 <div className="flex-1 min-w-0 text-sm">
                   <div className="truncate">
                     {label} · {p.project_name}
+                  </div>
+                  <div className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60 font-mono">
+                    {Math.floor(p.accumulated_minutes / 60)}h{" "}
+                    {p.accumulated_minutes % 60}m
                   </div>
                   {p.note && (
                     <div className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60 truncate">

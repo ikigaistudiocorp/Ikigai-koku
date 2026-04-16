@@ -65,6 +65,10 @@ export const en = {
   planned_start_now: "Start now",
   planned_delete: "Remove",
   planned_new_title: "New planned session",
+  plan_remove_title: "Remove from To-Do?",
+  plan_remove_subtitle: "You finished a session from this planned item. Keep it on the list for another round, or remove it.",
+  plan_remove_keep: "Keep",
+  plan_remove_confirm: "Remove",
 
   hire_signal_label: "Hire Signal",
   hire_signal_green: "No signal",

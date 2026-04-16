@@ -56,6 +56,9 @@ export function ClockScreen() {
   const storedProject = useClockStore((s) => s.selectedProjectId);
   const setStoredProject = useClockStore((s) => s.setSelectedProjectId);
   const setPendingStop = useClockStore((s) => s.setPendingStop);
+  const startedFromPlanId = useClockStore((s) => s.startedFromPlanId);
+  const setStartedFromPlanId = useClockStore((s) => s.setStartedFromPlanId);
+  const [planRemovePrompt, setPlanRemovePrompt] = useState<string | null>(null);
 
   const [pickerValue, setPickerValue] = useState<PickerValue | null>(null);
   const [busy, setBusy] = useState(false);
@@ -221,6 +224,9 @@ export function ClockScreen() {
       setPendingEndedAt(null);
       setNote("");
       await refreshAll();
+      if (!data.discarded && startedFromPlanId) {
+        setPlanRemovePrompt(startedFromPlanId);
+      }
       if (data.discarded) {
         pushToast(t("clock_session_discarded"), "warning");
       } else if (typeof data.duration_minutes === "number") {
@@ -493,6 +499,44 @@ export function ClockScreen() {
           }}
         />
       </BottomSheet>
+
+      {planRemovePrompt && (
+        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40 px-4 py-6">
+          <Card padding="lg" className="w-full max-w-md space-y-4">
+            <h2 className="text-lg font-heading">{t("plan_remove_title")}</h2>
+            <p className="text-sm text-ikigai-dark/70 dark:text-ikigai-cream/70">
+              {t("plan_remove_subtitle")}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                fullWidth
+                onClick={() => {
+                  setStartedFromPlanId(null);
+                  setPlanRemovePrompt(null);
+                }}
+              >
+                {t("plan_remove_keep")}
+              </Button>
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={async () => {
+                  await fetch(`/api/planned-sessions/${planRemovePrompt}`, {
+                    method: "DELETE",
+                    credentials: "include",
+                  });
+                  qc.invalidateQueries({ queryKey: ["planned-sessions"] });
+                  setStartedFromPlanId(null);
+                  setPlanRemovePrompt(null);
+                }}
+              >
+                {t("plan_remove_confirm")}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
     </main>
   );

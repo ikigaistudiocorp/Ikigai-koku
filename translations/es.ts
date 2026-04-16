@@ -65,6 +65,10 @@ export const es = {
   planned_start_now: "Iniciar ahora",
   planned_delete: "Eliminar",
   planned_new_title: "Nueva sesión planeada",
+  plan_remove_title: "¿Quitar de Pendientes?",
+  plan_remove_subtitle: "Terminaste una sesión desde este pendiente. Mantenlo para otra ronda, o quítalo.",
+  plan_remove_keep: "Mantener",
+  plan_remove_confirm: "Quitar",
 
   hire_signal_label: "Señal de Contratación",
   hire_signal_green: "Sin señal",

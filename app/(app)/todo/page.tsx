@@ -14,6 +14,7 @@ export default function TodoPage() {
   const qc = useQueryClient();
   const { data: active } = useActiveSession();
   const setStoredProject = useClockStore((s) => s.setSelectedProjectId);
+  const setStartedFromPlanId = useClockStore((s) => s.setStartedFromPlanId);
 
   const onStartFromPlan = async (row: {
     id: string;
@@ -43,10 +44,7 @@ export default function TodoPage() {
       pushToast("start_failed", "warning");
       return;
     }
-    await fetch(`/api/planned-sessions/${row.id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    setStartedFromPlanId(row.id);
     setStoredProject(row.project_id);
     await Promise.all([
       qc.invalidateQueries({ queryKey: ["sessions", "active"] }),

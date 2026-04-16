@@ -16,7 +16,23 @@ export async function GET() {
   const { rows } = await query(
     `SELECT p.id, p.project_id, pr.name AS project_name, p.work_type,
             p.custom_work_type_id, c.name AS custom_work_type_name,
-            c.color AS custom_work_type_color, p.note, p.created_at
+            c.color AS custom_work_type_color, p.note, p.created_at,
+            COALESCE((
+              SELECT SUM(s.duration_minutes)::int
+                FROM sessions s
+               WHERE s.user_id = p.user_id
+                 AND s.project_id = p.project_id
+                 AND s.is_baseline = false
+                 AND s.is_active = false
+                 AND s.started_at >= p.created_at
+                 AND (
+                   (p.custom_work_type_id IS NOT NULL
+                     AND s.custom_work_type_id = p.custom_work_type_id)
+                   OR (p.custom_work_type_id IS NULL
+                     AND s.custom_work_type_id IS NULL
+                     AND s.work_type = p.work_type)
+                 )
+            ), 0) AS accumulated_minutes
        FROM planned_sessions p
        JOIN projects pr ON pr.id = p.project_id
        LEFT JOIN custom_work_types c ON c.id = p.custom_work_type_id

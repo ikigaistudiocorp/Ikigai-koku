@@ -15,6 +15,8 @@ type State = {
   setSelectedProjectId: (id: string | null) => void;
   pendingStop: PendingStop | null;
   setPendingStop: (p: PendingStop | null) => void;
+  startedFromPlanId: string | null;
+  setStartedFromPlanId: (id: string | null) => void;
 };
 
 export const useClockStore = create<State>()(
@@ -24,6 +26,8 @@ export const useClockStore = create<State>()(
       setSelectedProjectId: (id) => set({ selectedProjectId: id }),
       pendingStop: null,
       setPendingStop: (p) => set({ pendingStop: p }),
+      startedFromPlanId: null,
+      setStartedFromPlanId: (id) => set({ startedFromPlanId: id }),
     }),
     { name: "koku-clock", skipHydration: true }
   )
