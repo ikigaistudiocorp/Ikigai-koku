@@ -84,6 +84,8 @@ export const en = {
   sort_accumulated: "Most time",
   sort_name: "Name",
   sort_recent: "Recent activity",
+  sort_custom: "Custom",
+  drag_handle_label: "Drag to reorder",
 
   hire_signal_label: "Hire Signal",
   hire_signal_green: "No signal",

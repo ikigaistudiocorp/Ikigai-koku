@@ -84,6 +84,8 @@ export const es = {
   sort_accumulated: "Más tiempo",
   sort_name: "Nombre",
   sort_recent: "Actividad reciente",
+  sort_custom: "Personalizado",
+  drag_handle_label: "Arrastra para ordenar",
 
   hire_signal_label: "Señal de Contratación",
   hire_signal_green: "Sin señal",

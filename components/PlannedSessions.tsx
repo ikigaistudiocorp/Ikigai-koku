@@ -2,6 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useTranslation } from "@/lib/i18n";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +27,7 @@ import { WorkTypePicker } from "@/components/ui/WorkTypePicker";
 import { WorkTypeDot } from "@/components/ui/WorkTypeDot";
 import { WORK_TYPE_META, type WorkType } from "@/types";
 import { useProjects, useCustomWorkTypes } from "@/hooks/useProjects";
+import { useCustomOrder } from "@/hooks/useCustomOrder";
 
 type PlannedRow = {
   id: string;
@@ -26,8 +43,9 @@ type PlannedRow = {
   priority: 1 | 2 | 3 | 4;
 };
 
-type SortKey = "priority" | "newest" | "accumulated";
+type SortKey = "priority" | "newest" | "accumulated" | "custom";
 const SORT_LS_KEY = "koku-todo-sort";
+const ORDER_LS_KEY = "koku-todo-order";
 
 const PRIORITY_STYLE: Record<1 | 2 | 3 | 4, string> = {
   1: "bg-red-500",
@@ -53,7 +71,12 @@ export function PlannedSessions({
   const [sortKey, setSortKey] = useState<SortKey>("priority");
   useEffect(() => {
     const stored = localStorage.getItem(SORT_LS_KEY);
-    if (stored === "priority" || stored === "newest" || stored === "accumulated") {
+    if (
+      stored === "priority" ||
+      stored === "newest" ||
+      stored === "accumulated" ||
+      stored === "custom"
+    ) {
       setSortKey(stored);
     }
   }, []);
@@ -61,6 +84,14 @@ export function PlannedSessions({
     setSortKey(v);
     localStorage.setItem(SORT_LS_KEY, v);
   };
+
+  const { apply: applyCustomOrder, setOrder } = useCustomOrder(ORDER_LS_KEY);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    })
+  );
 
   const { data } = useQuery<{ planned: PlannedRow[] }>({
     queryKey: ["planned-sessions"],
@@ -86,6 +117,8 @@ export function PlannedSessions({
       r.sort((a, b) => b.created_at.localeCompare(a.created_at));
     } else if (sortKey === "accumulated") {
       r.sort((a, b) => b.accumulated_minutes - a.accumulated_minutes);
+    } else if (sortKey === "custom") {
+      return applyCustomOrder(r);
     } else {
       r.sort(
         (a, b) =>
@@ -94,7 +127,16 @@ export function PlannedSessions({
       );
     }
     return r;
-  }, [data, sortKey]);
+  }, [data, sortKey, applyCustomOrder]);
+
+  const onDragEnd = (e: DragEndEvent) => {
+    if (!e.over || e.active.id === e.over.id) return;
+    const ids = rows.map((r) => r.id);
+    const from = ids.indexOf(String(e.active.id));
+    const to = ids.indexOf(String(e.over.id));
+    if (from < 0 || to < 0) return;
+    setOrder(arrayMove(ids, from, to));
+  };
 
   const setPriority = async (id: string, priority: 1 | 2 | 3 | 4) => {
     await fetch(`/api/planned-sessions/${id}`, {
@@ -122,6 +164,7 @@ export function PlannedSessions({
             <option value="priority">{t("sort_priority")}</option>
             <option value="newest">{t("sort_newest")}</option>
             <option value="accumulated">{t("sort_accumulated")}</option>
+            <option value="custom">{t("sort_custom")}</option>
           </select>
           <button
             type="button"
@@ -137,71 +180,46 @@ export function PlannedSessions({
         <p className="text-center text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60 py-2">
           {t("planned_empty")}
         </p>
+      ) : sortKey === "custom" ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onDragEnd}
+        >
+          <SortableContext
+            items={rows.map((r) => r.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="space-y-1">
+              {rows.map((p) => (
+                <PlannedRowItem
+                  key={p.id}
+                  row={p}
+                  sortable
+                  language={language}
+                  disabled={!!disabled}
+                  onStart={() => onStartFromPlan(p)}
+                  onRemove={() => remove(p.id)}
+                  onPriorityChange={(pr) => setPriority(p.id, pr)}
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
       ) : (
         <ul className="space-y-1">
-          {rows.map((p) => {
-            const meta = WORK_TYPE_META[p.work_type as WorkType];
-            const label =
-              p.custom_work_type_name ??
-              (language === "en" ? meta?.label_en : meta?.label_es);
-            return (
-              <li
-                key={p.id}
-                className="flex items-center gap-2 rounded-lg bg-white dark:bg-ikigai-card px-3 py-2 border border-black/[0.05] dark:border-white/[0.06]"
-              >
-                <select
-                  value={p.priority}
-                  onChange={(e) =>
-                    setPriority(p.id, Number(e.target.value) as 1 | 2 | 3 | 4)
-                  }
-                  aria-label={t("priority_label")}
-                  className={
-                    "text-[10px] font-bold uppercase rounded-full px-2 py-0.5 text-white border-0 appearance-none " +
-                    PRIORITY_STYLE[p.priority]
-                  }
-                >
-                  <option value={1}>{t("priority_urgent")}</option>
-                  <option value={2}>{t("priority_high")}</option>
-                  <option value={3}>{t("priority_normal")}</option>
-                  <option value={4}>{t("priority_low")}</option>
-                </select>
-                <WorkTypeDot
-                  workType={p.work_type}
-                  customColor={p.custom_work_type_color}
-                />
-                <div className="flex-1 min-w-0 text-sm">
-                  <div className="truncate">
-                    {label} · {p.project_name}
-                  </div>
-                  <div className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60 font-mono">
-                    {Math.floor(p.accumulated_minutes / 60)}h{" "}
-                    {p.accumulated_minutes % 60}m
-                  </div>
-                  {p.note && (
-                    <div className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60 truncate">
-                      {p.note}
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onStartFromPlan(p)}
-                  disabled={disabled}
-                  className="text-xs font-mono text-ikigai-purple disabled:opacity-40"
-                >
-                  {t("planned_start_now")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => remove(p.id)}
-                  aria-label={t("planned_delete")}
-                  className="w-7 h-7 inline-flex items-center justify-center rounded-full hover:bg-black/[0.06] dark:hover:bg-white/[0.06] text-ikigai-dark/60 dark:text-ikigai-cream/60"
-                >
-                  ×
-                </button>
-              </li>
-            );
-          })}
+          {rows.map((p) => (
+            <PlannedRowItem
+              key={p.id}
+              row={p}
+              sortable={false}
+              language={language}
+              disabled={!!disabled}
+              onStart={() => onStartFromPlan(p)}
+              onRemove={() => remove(p.id)}
+              onPriorityChange={(pr) => setPriority(p.id, pr)}
+            />
+          ))}
         </ul>
       )}
 
@@ -211,6 +229,105 @@ export function PlannedSessions({
         </BottomSheet>
       )}
     </div>
+  );
+}
+
+function PlannedRowItem({
+  row,
+  sortable,
+  language,
+  disabled,
+  onStart,
+  onRemove,
+  onPriorityChange,
+}: {
+  row: PlannedRow;
+  sortable: boolean;
+  language: "es" | "en";
+  disabled: boolean;
+  onStart: () => void;
+  onRemove: () => void;
+  onPriorityChange: (p: 1 | 2 | 3 | 4) => void;
+}) {
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: row.id, disabled: !sortable });
+  const meta = WORK_TYPE_META[row.work_type as WorkType];
+  const label =
+    row.custom_work_type_name ??
+    (language === "en" ? meta?.label_en : meta?.label_es);
+  return (
+    <li
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : undefined,
+      }}
+      className="flex items-center gap-2 rounded-lg bg-white dark:bg-ikigai-card px-3 py-2 border border-black/[0.05] dark:border-white/[0.06]"
+    >
+      {sortable && (
+        <button
+          type="button"
+          aria-label={t("drag_handle_label")}
+          {...attributes}
+          {...listeners}
+          className="touch-none w-5 h-7 inline-flex items-center justify-center text-ikigai-dark/40 dark:text-ikigai-cream/40 cursor-grab active:cursor-grabbing"
+        >
+          ⋮⋮
+        </button>
+      )}
+      <select
+        value={row.priority}
+        onChange={(e) =>
+          onPriorityChange(Number(e.target.value) as 1 | 2 | 3 | 4)
+        }
+        aria-label={t("priority_label")}
+        className={
+          "text-[10px] font-bold uppercase rounded-full px-2 py-0.5 text-white border-0 appearance-none " +
+          PRIORITY_STYLE[row.priority]
+        }
+      >
+        <option value={1}>{t("priority_urgent")}</option>
+        <option value={2}>{t("priority_high")}</option>
+        <option value={3}>{t("priority_normal")}</option>
+        <option value={4}>{t("priority_low")}</option>
+      </select>
+      <WorkTypeDot
+        workType={row.work_type}
+        customColor={row.custom_work_type_color}
+      />
+      <div className="flex-1 min-w-0 text-sm">
+        <div className="truncate">
+          {label} · {row.project_name}
+        </div>
+        <div className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60 font-mono">
+          {Math.floor(row.accumulated_minutes / 60)}h{" "}
+          {row.accumulated_minutes % 60}m
+        </div>
+        {row.note && (
+          <div className="text-xs text-ikigai-dark/60 dark:text-ikigai-cream/60 truncate">
+            {row.note}
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onStart}
+        disabled={disabled}
+        className="text-xs font-mono text-ikigai-purple disabled:opacity-40"
+      >
+        {t("planned_start_now")}
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={t("planned_delete")}
+        className="w-7 h-7 inline-flex items-center justify-center rounded-full hover:bg-black/[0.06] dark:hover:bg-white/[0.06] text-ikigai-dark/60 dark:text-ikigai-cream/60"
+      >
+        ×
+      </button>
+    </li>
   );
 }
 
