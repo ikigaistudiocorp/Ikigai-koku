@@ -277,22 +277,26 @@ function PlannedRowItem({
           ⋮⋮
         </button>
       )}
-      <select
-        value={row.priority}
-        onChange={(e) =>
-          onPriorityChange(Number(e.target.value) as 1 | 2 | 3 | 4)
-        }
+      <button
+        type="button"
+        onClick={() => {
+          const next = ((row.priority % 4) + 1) as 1 | 2 | 3 | 4;
+          onPriorityChange(next);
+        }}
         aria-label={t("priority_label")}
         className={
-          "text-[10px] font-bold uppercase rounded-full px-2 py-0.5 text-white text-center border-0 appearance-none " +
+          "shrink-0 text-[10px] font-bold uppercase rounded-full px-2 py-0.5 text-white text-center " +
           PRIORITY_STYLE[row.priority]
         }
       >
-        <option value={1}>{t("priority_urgent")}</option>
-        <option value={2}>{t("priority_high")}</option>
-        <option value={3}>{t("priority_normal")}</option>
-        <option value={4}>{t("priority_low")}</option>
-      </select>
+        {row.priority === 1
+          ? t("priority_urgent")
+          : row.priority === 2
+            ? t("priority_high")
+            : row.priority === 3
+              ? t("priority_normal")
+              : t("priority_low")}
+      </button>
       <WorkTypeDot
         workType={row.work_type}
         customColor={row.custom_work_type_color}
